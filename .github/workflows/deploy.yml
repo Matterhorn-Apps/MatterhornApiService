@@ -17,6 +17,8 @@ jobs:
     - name: Build
       run: |
         ./build.sh
+    - name: Test
+      run: go test
     - name: Pack
       run: |
         git archive -o source.zip HEAD
