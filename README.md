@@ -3,11 +3,16 @@ Web API service for Matterhorn implemented with Go.
 
 ## Setup
 
+### Database
+MatterhornApiService expects to connect to a MySQL-compatible database instance. You will need to set some environment variables to define how to connect.
+`MATTERHORN_DB_ENDPOINT` - Specifies the host name of the database instance, including the port. E.g., http://mydatabase.com:3306.
+`MATTERHORN_DB_PASSWORD` - Specifies the password used to connect to the database instance. User name is expected to be "admin" for now.
+
 ### Compile
-`go build .`
+`go build`
 
 ### Run
-`go run server.go`
+`go run`
 
 ## CI/CD
 
