@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -64,10 +63,7 @@ func run() {
 		panic("DB is nil immediately after assignment!")
 	}
 
-	defer func() {
-		log.Println("Closing db...")
-		// db.Close()
-	}()
+	defer db.Close()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { helloWorld(w, r) })
 	http.HandleFunc("/counter", func(w http.ResponseWriter, r *http.Request) { counterHandler(w, r, db) })
