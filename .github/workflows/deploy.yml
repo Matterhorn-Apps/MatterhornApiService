@@ -53,6 +53,7 @@ jobs:
         version_label: ${{ github.run_id }}
         region: ${{ secrets.AWS_REGION }}
         deployment_package: ./deployable/source.zip
+        use_existing_version_if_available: true
 
   deploy-prod:
     # Only run this job on master
@@ -76,3 +77,4 @@ jobs:
         version_label: ${{ github.run_id }}
         region: ${{ secrets.AWS_REGION }}
         deployment_package: ./deployable/source.zip
+        use_existing_version_if_available: true
