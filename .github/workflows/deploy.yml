@@ -1,8 +1,12 @@
 name: Deploy master
 
+# Execute workflow on push to master or on any pull request
+# Job to deploy to prod will only execute for master branch
 on: 
   push:
-    branches: [ master ]
+    branches:
+      - master
+  pull_request:
 
 jobs:
   build:
@@ -14,29 +18,64 @@ jobs:
       uses: actions/setup-go@v1
       with:
         go-version: '1.14'
+
+    # Compile application to binary at bin/application
     - name: Build
-      run: |
-        ./build.sh
+      run: go build -o bin/application .
+    
+    # Execute unit tests
+    - name: Test
+      env:
+        MATTERHORN_DB_ENDPOINT: ${{ secrets.MATTERHORN_DB_ENDPOINT }}
+        MATTERHORN_DB_PASSWORD: ${{ secrets.MATTERHORN_DB_PASSWORD }}
+      run: go test
+
+    # Pack compiled binary into zip file
     - name: Pack
-      run: |
-        git archive -o source.zip HEAD
+      run: zip source.zip bin/application
+
+    # Upload build artifact for consumption by subsequent deploy jobs
     - name: Upload build artifact
       uses: actions/upload-artifact@v1
       with:
         name: deployable
         path: source.zip
 
-  deploy:
+  deploy-dev:
     runs-on: ubuntu-latest
     needs: [ build ]
-    
+
     steps:
     - name: Download build artifact
       uses: actions/download-artifact@v1
       with:
         name: deployable
     - name: Deploy to Elastic Beanstalk
-      uses: einaregilsson/beanstalk-deploy@verboselog
+      uses: einaregilsson/beanstalk-deploy@v8
+      with:
+        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        application_name: MatterhornApiService
+        environment_name: Matterhornapiservice-env-dev
+        version_label: ${{ github.run_id }}
+        region: ${{ secrets.AWS_REGION }}
+        deployment_package: ./deployable/source.zip
+        use_existing_version_if_available: true
+
+  deploy-prod:
+    # Only run this job on master
+    if: github.ref == 'refs/heads/master'
+
+    runs-on: ubuntu-latest
+    needs: [ build, deploy-dev ]
+
+    steps:
+    - name: Download build artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: deployable
+    - name: Deploy to Elastic Beanstalk
+      uses: einaregilsson/beanstalk-deploy@v8
       with:
         aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -45,3 +84,4 @@ jobs:
         version_label: ${{ github.run_id }}
         region: ${{ secrets.AWS_REGION }}
         deployment_package: ./deployable/source.zip
+        use_existing_version_if_available: true
