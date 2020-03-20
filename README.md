@@ -12,7 +12,7 @@ MatterhornApiService expects to connect to a MySQL-compatible database instance.
 `go build`
 
 ### Run
-`go run`
+`go run .`
 
 ### Unit Tests
 `go test`

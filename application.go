@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,6 +15,11 @@ const port = ":5000"
 // Responds to an HTTP request with a friendly response message
 func helloWorld(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello world!")
+}
+
+type counterResponse struct {
+	ID    int
+	Value int
 }
 
 // Responds to an HTTP request by displaying the latest counter value and incrementing it in the database
@@ -43,8 +49,19 @@ func counterHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 	defer updateRows.Close()
 
+	// Construct response data object
+	var data counterResponse = counterResponse{
+		ID:    1,
+		Value: value,
+	}
+	jData, jsonErr := json.Marshal(data)
+	if jsonErr != nil {
+		panic(fmt.Sprintf("Failed to marshal json response data: %s", jsonErr.Error()))
+	}
+
 	// Return response
-	fmt.Fprintf(w, "Counter value is %d", value)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jData)
 }
 
 // Main entry point function for MatterhornApiService
