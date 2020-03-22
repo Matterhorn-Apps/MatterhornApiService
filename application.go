@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"database/sql"
+
+	"github.com/joho/godotenv"
 )
 
 // Defines port to listen on for requests
@@ -71,6 +73,12 @@ func main() {
 }
 
 func run() {
+	// Load environment variables
+	envLoadErr := godotenv.Load()
+	if envLoadErr != nil {
+		panic("Error loading .env file")
+	}
+
 	db, err := DbConnect()
 	if err != nil {
 		panic("Failed to connect to DB! Error: " + err.Error())

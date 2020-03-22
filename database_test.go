@@ -5,6 +5,9 @@ import (
 )
 
 func TestDbConnect(t *testing.T) {
+	// Load environment variables
+	LoadEnv()
+
 	// Attempt to connect to the database
 	db, err := DbConnect()
 	if err != nil {
