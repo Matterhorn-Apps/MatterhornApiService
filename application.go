@@ -71,6 +71,9 @@ func main() {
 }
 
 func run() {
+	// Load environment variables
+	LoadEnv()
+
 	db, err := DbConnect()
 	if err != nil {
 		panic("Failed to connect to DB! Error: " + err.Error())
