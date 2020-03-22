@@ -26,7 +26,7 @@ func DbConnect() (*sql.DB, error) {
 
 	dbName, keyExists = os.LookupEnv("MATTERHORN_DB_NAME")
 	if !keyExists {
-		panic("MATTERHORN_DB_PASSWORD environment variable is unset!")
+		panic("MATTERHORN_DB_NAME environment variable is unset!")
 	}
 
 	dbUser := "admin"
