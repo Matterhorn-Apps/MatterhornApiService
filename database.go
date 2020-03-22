@@ -12,7 +12,7 @@ import (
 // DbConnect establishes a connection with MatterhornDb and returns a sql DB instance.
 func DbConnect() (*sql.DB, error) {
 	// Attempt to read DB connection information from environment variables
-	var dbEndpoint, dbPassword string
+	var dbEndpoint, dbPassword, dbName string
 	var keyExists bool
 	dbEndpoint, keyExists = os.LookupEnv("MATTERHORN_DB_ENDPOINT")
 	if !keyExists {
@@ -24,8 +24,12 @@ func DbConnect() (*sql.DB, error) {
 		panic("MATTERHORN_DB_PASSWORD environment variable is unset!")
 	}
 
+	dbName, keyExists = os.LookupEnv("MATTERHORN_DB_NAME")
+	if !keyExists {
+		panic("MATTERHORN_DB_PASSWORD environment variable is unset!")
+	}
+
 	dbUser := "admin"
-	dbName := "MatterhornDb"
 
 	// Create the MySQL DNS string for the DB connection
 	// user:password@protocol(endpoint)/dbname?<params>
