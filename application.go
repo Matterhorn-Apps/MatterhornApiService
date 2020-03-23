@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -45,7 +46,7 @@ func counterHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	// Query the database to update the counter value
 	updateRows, updateErr := db.Query(fmt.Sprintf("UPDATE Counters SET Value='%d' WHERE ID='%d'", value+1, 1))
 	if updateErr != nil {
-		panic("Failed to update counter value. Error: " + updateErr.Error())
+		log.Fatalf("Failed to update counter value: %v", updateErr)
 	}
 	defer updateRows.Close()
 
@@ -56,7 +57,7 @@ func counterHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 	jData, jsonErr := json.Marshal(data)
 	if jsonErr != nil {
-		panic(fmt.Sprintf("Failed to marshal json response data: %s", jsonErr.Error()))
+		log.Fatalf("Failed to marshal json response data: %v", jsonErr)
 	}
 
 	// Return response
@@ -74,18 +75,20 @@ func run() {
 	// Load environment variables
 	LoadEnv()
 
+	// Connect to database
 	db, err := DbConnect()
 	if err != nil {
-		panic("Failed to connect to DB! Error: " + err.Error())
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
-
-	if db == nil {
-		panic("DB is nil immediately after assignment!")
-	}
-
 	defer db.Close()
 
+	// Migrate database if necessary
+	Migrate(db)
+
+	// Set up HTTP handlers
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { helloWorld(w, r) })
 	http.HandleFunc("/counter", func(w http.ResponseWriter, r *http.Request) { counterHandler(w, r, db) })
+
+	// Start serving requests
 	http.ListenAndServe(port, nil)
 }
