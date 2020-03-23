@@ -32,7 +32,7 @@ jobs:
 
     # Pack compiled binary into zip file
     - name: Pack
-      run: zip source.zip application migrations .env*
+      run: zip source.zip application migrations/* .env*
 
     # Upload build artifact for consumption by subsequent deploy jobs
     - name: Upload build artifact
