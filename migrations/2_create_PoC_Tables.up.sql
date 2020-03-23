@@ -1,0 +1,32 @@
+CREATE TABLE IF NOT EXISTS Users (
+  UserID int,
+  DisplayName VARCHAR(50) NOT NULL DEFAULT 'Anonymous',
+  PRIMARY KEY (UserID)
+);
+
+CREATE TABLE IF NOT EXISTS ExerciseRecords (
+    ID int AUTO_INCREMENT,
+    UserID int,
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Calories int NOT NULL,
+    PRIMARY KEY (ID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
+
+CREATE TABLE IF NOT EXISTS FoodRecords (
+    ID int AUTO_INCREMENT,
+    UserID int,
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Calories int NOT NULL,
+    PRIMARY KEY (ID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
+
+CREATE TABLE IF NOT EXISTS WeightRecords (
+    ID int AUTO_INCREMENT,
+    UserID int,
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Weight Decimal(6,2) NOT NULL,
+    PRIMARY KEY (ID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
