@@ -21,7 +21,7 @@ jobs:
 
     # Compile application to binary at bin/application
     - name: Build
-      run: go build -o bin/application .
+      run: go build -o application .
     
     # Execute unit tests
     - name: Test
@@ -32,7 +32,7 @@ jobs:
 
     # Pack compiled binary into zip file
     - name: Pack
-      run: zip source.zip bin/application
+      run: zip source.zip application migrations
 
     # Upload build artifact for consumption by subsequent deploy jobs
     - name: Upload build artifact

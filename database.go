@@ -3,38 +3,74 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
-	_ "github.com/aws/aws-sdk-go/service/rds/rdsutils"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
+const migrationsDir string = "./migrations"
+
 // DbConnect establishes a connection with MatterhornDb and returns a sql DB instance.
+// On failure, logs error message and immediately exits program.
 func DbConnect() (*sql.DB, error) {
 	// Attempt to read DB connection information from environment variables
-	var dbEndpoint, dbPassword, dbName string
+	var dbEndpoint, dbName, dbPassword, dbUser string
 	var keyExists bool
 	dbEndpoint, keyExists = os.LookupEnv("MATTERHORN_DB_ENDPOINT")
 	if !keyExists {
-		panic("MATTERHORN_DB_ENDPOINT environment variable is unset!")
+		log.Fatalf("MATTERHORN_DB_ENDPOINT environment variable is unset!")
+	}
+
+	dbUser, keyExists = os.LookupEnv("MATTERHORN_DB_USERNAME")
+	if !keyExists {
+		log.Fatalf("MATTERHORN_DB_USERNAME environment variable is unset!")
 	}
 
 	dbPassword, keyExists = os.LookupEnv("MATTERHORN_DB_PASSWORD")
 	if !keyExists {
-		panic("MATTERHORN_DB_PASSWORD environment variable is unset!")
+		log.Fatalf("MATTERHORN_DB_PASSWORD environment variable is unset!")
 	}
 
 	dbName, keyExists = os.LookupEnv("MATTERHORN_DB_NAME")
 	if !keyExists {
-		panic("MATTERHORN_DB_NAME environment variable is unset!")
+		log.Fatalf("MATTERHORN_DB_NAME environment variable is unset!")
 	}
-
-	dbUser := "admin"
 
 	// Create the MySQL DNS string for the DB connection
 	// user:password@protocol(endpoint)/dbname?<params>
-	dnsStr := fmt.Sprintf("%s:%s@tcp(%s)/%s", dbUser, dbPassword, dbEndpoint, dbName)
+	dnsStr := fmt.Sprintf("%s:%s@tcp(%s)/%s?multiStatements=true", dbUser, dbPassword, dbEndpoint, dbName)
 
 	// Open db connection
 	return sql.Open("mysql", dnsStr)
+}
+
+// Migrate executed migrations on the given database.
+// On failure, logs error message and immediately exits program.
+func Migrate(db *sql.DB) {
+	log.Println("Migrating database...")
+
+	// Run migrations
+	driver, err := mysql.WithInstance(db, &mysql.Config{})
+	if err != nil {
+		log.Fatalf("Could not start database migration: %v", err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
+		fmt.Sprintf("file://%s", migrationsDir), // file://path/to/directory
+		"mysql", driver)
+
+	if err != nil {
+		log.Fatalf("Database migration failed: %v", err)
+	}
+	defer m.Close()
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("An error occurred while syncing the database: %v", err)
+	}
+
+	log.Println("Database migrated.")
 }

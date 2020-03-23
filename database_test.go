@@ -11,12 +11,12 @@ func TestDbConnect(t *testing.T) {
 	// Attempt to connect to the database
 	db, err := DbConnect()
 	if err != nil {
-		t.Errorf("Failed to connect to database: %s", err.Error())
+		t.Errorf("Failed to connect to database: %v", err)
 	}
 
 	// Attempt to ping the database to make sure we actually established a connection
 	err = db.Ping()
 	if err != nil {
-		t.Errorf("Failed to connect to database: %s", err.Error())
+		t.Errorf("Failed to connect to database: %v", err)
 	}
 }
