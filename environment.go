@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -16,8 +17,14 @@ func LoadEnv() {
 	}
 
 	// Environment-specific configuration
-	godotenv.Load(".env." + env)
+	err := godotenv.Load(".env." + env)
+	if err != nil {
+		log.Fatalf("Failed to load configuration from .env.%s: %v", env, err)
+	}
 
 	// Global configuration (lower priority)
-	godotenv.Load()
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatalf("Failed to load configuration from .env: %v", err)
+	}
 }
