@@ -66,7 +66,6 @@ func Migrate(db *sql.DB) {
 	if err != nil {
 		log.Fatalf("Database migration failed: %v", err)
 	}
-	defer m.Close()
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		log.Fatalf("An error occurred while syncing the database: %v", err)
