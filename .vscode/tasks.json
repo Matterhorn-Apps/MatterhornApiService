@@ -16,7 +16,7 @@
             "label": "Pack",
             "type": "shell",
             "command": "go build -o bin/application ."
-        }
+        },
         {
             "label": "Clean",
             "type": "shell",
@@ -26,6 +26,16 @@
             "label": "Run Server",
             "type": "shell",
             "command": "go run ."
+        },
+        {
+            "label": "Migrate Database (Dev)",
+            "type": "shell",
+            "command": "migrate -source file://./migrations -database 'mysql://admin:${env:MATTERHORN_DB_PASSWORD}@tcp(matterhorn-database-instance.cll2j98hq3ha.us-east-1.rds.amazonaws.com:3306)/MatterhornDb_Dev?multiStatements=true' up"
+        },
+        {
+            "label": "Rollback Database (Dev)",
+            "type": "shell",
+            "command": "migrate -source file://./migrations -database 'mysql://admin:${env:MATTERHORN_DB_PASSWORD}@tcp(matterhorn-database-instance.cll2j98hq3ha.us-east-1.rds.amazonaws.com:3306)/MatterhornDb_Dev?multiStatements=true' down 1"
         }
     ]
 }
