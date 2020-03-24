@@ -23,6 +23,11 @@
             "command": "go clean"
         },
         {
+            "label": "Generate Server Stubs",
+            "type": "shell",
+            "command": "docker run --rm -v ${PWD}:/local -e GO_POST_PROCESS_FILE='/usr/local/bin/gofmt -w' openapitools/openapi-generator-cli generate -i /local/api/openapi.yaml -g go-server -o /local/ --type-mappings=DateTime=string --git-user-id Matterhorn-Apps --git-repo-id MatterhornApiService --enable-post-process-file"
+        },
+        {
             "label": "Run Server",
             "type": "shell",
             "command": "go run ."
