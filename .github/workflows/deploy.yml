@@ -28,6 +28,7 @@ jobs:
       env:
         MATTERHORN_DB_ENDPOINT: ${{ secrets.MATTERHORN_DB_ENDPOINT }}
         MATTERHORN_DB_PASSWORD: ${{ secrets.MATTERHORN_DB_PASSWORD }}
+        MATTERHORN_ENV: dev
       run: go test
 
     # Pack compiled binary into zip file
