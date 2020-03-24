@@ -16,7 +16,7 @@
             "label": "Pack",
             "type": "shell",
             "command": "go build -o bin/application ."
-        }
+        },
         {
             "label": "Clean",
             "type": "shell",
@@ -26,6 +26,39 @@
             "label": "Run Server",
             "type": "shell",
             "command": "go run ."
+        },
+
+        // These tasks are power tools for manually fixing issues in our cloud-deployed development database.
+        // {
+        //     "label": "Dev Database - Migrate",
+        //     "type": "shell",
+        //     "command": "migrate -source file://./migrations -database 'mysql://admin:${env:MATTERHORN_DB_PASSWORD}@tcp(matterhorn-database-instance.cll2j98hq3ha.us-east-1.rds.amazonaws.com:3306)/MatterhornDb_Dev?multiStatements=true' up"
+        // },
+        // {
+        //     "label": "Dev Database - Rollback",
+        //     "type": "shell",
+        //     "command": "migrate -source file://./migrations -database 'mysql://admin:${env:MATTERHORN_DB_PASSWORD}@tcp(matterhorn-database-instance.cll2j98hq3ha.us-east-1.rds.amazonaws.com:3306)/MatterhornDb_Dev?multiStatements=true' down 1"
+        // },
+
+        {
+            "label": "Local Database - Migrate",
+            "type": "shell",
+            "command": "migrate -source file://./migrations -database 'mysql://admin:${env:MATTERHORN_DB_PASSWORD}@tcp(localhost:3306)/MatterhornDb_Local?multiStatements=true' up"
+        },
+        {
+            "label": "Local Database - Rollback",
+            "type": "shell",
+            "command": "migrate -source file://./migrations -database 'mysql://admin:${env:MATTERHORN_DB_PASSWORD}@tcp(localhost:3306)/MatterhornDb_Local?multiStatements=true' down 1"
+        },
+        {
+            "label": "Local Database - Start",
+            "type": "shell",
+            "command": "docker run -d -p 3306:3306 --name=mysql-server -e MYSQL_USER=admin -e MYSQL_PASSWORD=${env:MATTERHORN_DB_PASSWORD} -e MYSQL_DATABASE=MatterhornDb_Local -e MYSQL_RANDOM_ROOT_PASSWORD=1 mysql"
+        },
+        {
+            "label": "Local Database - Kill/Remove",
+            "type": "shell",
+            "command": "docker rm -f mysql-server"
         }
     ]
 }
