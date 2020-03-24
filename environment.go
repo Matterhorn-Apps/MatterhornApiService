@@ -12,8 +12,8 @@ import (
 func LoadEnv() {
 	env := os.Getenv("MATTERHORN_ENV")
 	if "" == env {
-		// Default to "development"
-		env = "dev"
+		// Default to "local"
+		env = "local"
 	}
 
 	// Environment-specific configuration
