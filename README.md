@@ -32,4 +32,6 @@ GitHub Actions for this repository are configured to automatically deploy to Mat
 ## Database Migrations
 MatterhornApiService uses [golang-migrate](https://github.com/golang-migrate/migrate) to execute database migrations on startup.
 
-VSCode tasks are defined for migrating the development database or rolling back the most recently applied migration. These tasks require both that the `MATTERHORN_DB_PASSWORD` environment variable is set and that the golang-migrate CLI tool is installed. You can install this tool by first installing the [Scoop](https://scoop.sh/) package manager and then running `scoop install migrate`.
+VSCode tasks are defined for migrating the development database or rolling back the most recently applied migration. These tasks require both that the `MATTERHORN_DB_PASSWORD` environment variable is set and that the golang-migrate CLI tool is installed. 
+
+You can install this tool on Windows by first installing the [Scoop](https://scoop.sh/) package manager and then running `scoop install migrate`. On macOS, use homebrew and run `brew install golang-migrate`.
