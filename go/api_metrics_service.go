@@ -12,9 +12,12 @@ package openapi
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+
+	database "github.com/Matterhorn-Apps/MatterhornApiService/database"
 )
 
 // MetricsApiService is a service that implents the logic for the MetricsApiServicer
@@ -39,7 +42,15 @@ func (s *MetricsApiService) GetMetrics(userId int64) (interface{}, *int, error) 
 	query := fmt.Sprintf("SELECT Height, Weight, Sex, Age from Users WHERE UserID=%d;", userId)
 	readRows, readErr := db.Query(query)
 	if readErr != nil {
-		// TODO: Interpret error and attempt to map to appropriate status code
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1452:
+				// User not found
+				status := http.StatusNotFound
+				return nil, &status, readErr
+			}
+		}
+
 		log.Printf("Failed to query database: %v", readErr)
 		return nil, nil, readErr
 	}
@@ -52,7 +63,12 @@ func (s *MetricsApiService) GetMetrics(userId int64) (interface{}, *int, error) 
 	readRows.Next()
 	readErr = readRows.Scan(&height, &weight, &sex, &age)
 	if readErr != nil {
-		// TODO: Interpret error and attempt to map to appropriate status code
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			// TODO: Interpret error and attempt to map to appropriate status code
+			}
+		}
+
 		log.Printf("Failed to read row returned from query: %v", readErr)
 		return nil, nil, readErr
 	}
@@ -72,17 +88,36 @@ func (s *MetricsApiService) GetMetrics(userId int64) (interface{}, *int, error) 
 func (s *MetricsApiService) PutMetrics(userId int64, bodyMetrics BodyMetrics) (interface{}, *int, error) {
 	db := s.db
 
+	if bodyMetrics.Height < 0 {
+		status := http.StatusBadRequest
+		return nil, &status, errors.New("Invalid body metrics: Height must be non-negative")
+	} else if bodyMetrics.Weight < 0 {
+		status := http.StatusBadRequest
+		return nil, &status, errors.New("Invalid body metrics: Height must be non-negative")
+	} else if bodyMetrics.Age < 0 {
+		status := http.StatusBadRequest
+		return nil, &status, errors.New("Invalid body metrics: Age must be non-negative")
+	}
+
 	// Query the database for matching exercise records
 	query := fmt.Sprintf(
 		"UPDATE Users SET Height = %[2]d, Weight = %[3]f, Sex = '%[4]s', Age = %[5]d WHERE UserID = %[1]d",
 		userId, bodyMetrics.Height, bodyMetrics.Weight, bodyMetrics.Sex, bodyMetrics.Age)
 	_, readErr := db.Exec(query)
 	if readErr != nil {
-		// TODO: Interpret error and attempt to map to appropriate status code
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1452:
+				// User not found
+				status := http.StatusNotFound
+				return nil, &status, readErr
+			}
+		}
+
 		log.Printf("Failed to query database: %v", readErr)
 		return nil, nil, readErr
 	}
 
-	status := http.StatusOK
+	status := http.StatusNoContent
 	return bodyMetrics, &status, nil
 }

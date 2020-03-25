@@ -12,9 +12,12 @@ package openapi
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+
+	database "github.com/Matterhorn-Apps/MatterhornApiService/database"
 )
 
 // GoalsApiService is a service that implents the logic for the GoalsApiServicer
@@ -39,7 +42,15 @@ func (s *GoalsApiService) GetCalorieGoal(userId int64) (interface{}, *int, error
 	query := fmt.Sprintf("SELECT Calories from CalorieGoals WHERE UserID=%d;", userId)
 	readRows, readErr := db.Query(query)
 	if readErr != nil {
-		// TODO: Interpret error and attempt to map to appropriate status code
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1452:
+				// User not found
+				status := http.StatusNotFound
+				return nil, &status, readErr
+			}
+		}
+
 		log.Printf("Failed to query database: %v", readErr)
 		return nil, nil, readErr
 	}
@@ -65,17 +76,31 @@ func (s *GoalsApiService) GetCalorieGoal(userId int64) (interface{}, *int, error
 func (s *GoalsApiService) PutCalorieGoal(userId int64, calorieGoal CalorieGoal) (interface{}, *int, error) {
 	db := s.db
 
+	if calorieGoal.Calories < 0 {
+		status := http.StatusBadRequest
+		return nil, &status, errors.New("Invalid calorie goal provided")
+	}
+
 	// Query the database for matching exercise records
 	query := fmt.Sprintf(
 		"INSERT INTO CalorieGoals (UserID, Calories) VALUES (%d, %d) ON DUPLICATE KEY UPDATE Calories = %[2]d;",
 		userId, calorieGoal.Calories)
 	_, readErr := db.Exec(query)
 	if readErr != nil {
-		// TODO: Interpret error and attempt to map to appropriate status code
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1452:
+				// User not found
+				status := http.StatusNotFound
+				return nil, &status, readErr
+			}
+		}
+
 		log.Printf("Failed to query database: %v", readErr)
-		return nil, nil, readErr
+		status := http.StatusNoContent
+		return nil, &status, readErr
 	}
 
-	status := http.StatusOK
+	status := http.StatusNoContent
 	return calorieGoal, &status, nil
 }

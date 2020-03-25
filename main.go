@@ -14,6 +14,8 @@ import (
 	"log"
 	"net/http"
 
+	database "github.com/Matterhorn-Apps/MatterhornApiService/database"
+	environment "github.com/Matterhorn-Apps/MatterhornApiService/environment"
 	openapi "github.com/Matterhorn-Apps/MatterhornApiService/go"
 )
 
@@ -21,17 +23,17 @@ func main() {
 	log.Printf("Server started")
 
 	// Load environment variables
-	LoadEnv()
+	environment.LoadEnv()
 
 	// Connect to database
-	db, err := DbConnect()
+	db, err := database.DbConnect()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
 	// Migrate database if necessary
-	Migrate(db)
+	database.Migrate(db)
 
 	CountersApiService := openapi.NewCountersApiService(db)
 	CountersApiController := openapi.NewCountersApiController(CountersApiService)

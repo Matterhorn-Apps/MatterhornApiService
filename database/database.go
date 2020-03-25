@@ -1,4 +1,4 @@
-package main
+package database
 
 import (
 	"database/sql"
@@ -6,9 +6,9 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql"
+	mysql "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/mysql"
+	mysqlMigrate "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
@@ -54,7 +54,7 @@ func Migrate(db *sql.DB) {
 	log.Println("Migrating database...")
 
 	// Run migrations
-	driver, err := mysql.WithInstance(db, &mysql.Config{})
+	driver, err := mysqlMigrate.WithInstance(db, &mysqlMigrate.Config{})
 	if err != nil {
 		log.Fatalf("Could not start database migration: %v", err)
 	}
@@ -72,4 +72,13 @@ func Migrate(db *sql.DB) {
 	}
 
 	log.Println("Database migrated.")
+}
+
+func TryExtractMySQLErrorCode(err error) (*uint16, bool) {
+	// Attempt to map specific MySQL error to a status code
+	if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+		return &mysqlErr.Number, true
+	} else {
+		return nil, false
+	}
 }

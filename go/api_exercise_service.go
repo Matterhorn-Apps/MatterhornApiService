@@ -15,6 +15,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	database "github.com/Matterhorn-Apps/MatterhornApiService/database"
 )
 
 // ExerciseApiService is a service that implents the logic for the ExerciseApiServicer
@@ -41,7 +43,15 @@ func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime stri
 		userId, startDateTime, endDateTime)
 	readRows, readErr := db.Query(query)
 	if readErr != nil {
-		// TODO: Interpret error and attempt to map to appropriate status code
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1292:
+				// Time range invalid
+				status := http.StatusBadRequest
+				return nil, &status, readErr
+			}
+		}
+
 		log.Printf("Failed to query database: %v", readErr)
 		return nil, nil, readErr
 	}
@@ -79,7 +89,19 @@ func (s *ExerciseApiService) PostExerciseRecord(userId int64, exerciseRecord Exe
 		userId, exerciseRecord.Calories, exerciseRecord.Label, exerciseRecord.Timestamp)
 	_, readErr := db.Exec(query)
 	if readErr != nil {
-		// TODO: Interpret error and attempt to map to appropriate status code
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1292:
+				// Timestamp invalid
+				status := http.StatusBadRequest
+				return nil, &status, readErr
+			case 1452:
+				// User not found
+				status := http.StatusNotFound
+				return nil, &status, readErr
+			}
+		}
+
 		log.Printf("Failed to query database: %v", readErr)
 		return nil, nil, readErr
 	}

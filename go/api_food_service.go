@@ -15,6 +15,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	database "github.com/Matterhorn-Apps/MatterhornApiService/database"
 )
 
 // FoodApiService is a service that implents the logic for the FoodApiServicer
@@ -41,7 +43,19 @@ func (s *FoodApiService) GetFoodRecords(userId int64, startDateTime string, endD
 		userId, startDateTime, endDateTime)
 	readRows, readErr := db.Query(query)
 	if readErr != nil {
-		// TODO: Interpret error and attempt to map to appropriate status code
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1292:
+				// Time range invalid
+				status := http.StatusBadRequest
+				return nil, &status, readErr
+			case 1452:
+				// User not found
+				status := http.StatusNotFound
+				return nil, &status, readErr
+			}
+		}
+
 		log.Printf("Failed to query database: %v", readErr)
 		return nil, nil, readErr
 	}
@@ -54,7 +68,6 @@ func (s *FoodApiService) GetFoodRecords(userId int64, startDateTime string, endD
 		var timestamp string
 		readErr = readRows.Scan(&calories, &label, &timestamp)
 		if readErr != nil {
-			// TODO: Interpret error and attempt to map to appropriate status code
 			log.Printf("Failed to read row returned from query: %v", readErr)
 			return nil, nil, readErr
 		}
@@ -80,6 +93,15 @@ func (s *FoodApiService) PostFoodRecord(userId int64, foodRecord FoodRecord) (in
 		userId, foodRecord.Calories, foodRecord.Label, foodRecord.Timestamp)
 	_, readErr := db.Exec(query)
 	if readErr != nil {
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1452:
+				// User not found
+				status := http.StatusNotFound
+				return nil, &status, readErr
+			}
+		}
+
 		log.Printf("Failed to query database: %v", readErr)
 		return nil, nil, readErr
 	}

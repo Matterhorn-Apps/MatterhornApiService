@@ -1,12 +1,14 @@
-package main
+package database
 
 import (
 	"testing"
+
+	environment "github.com/Matterhorn-Apps/MatterhornApiService/environment"
 )
 
 func TestDbConnect(t *testing.T) {
 	// Load environment variables
-	LoadEnv()
+	environment.LoadEnv()
 
 	// Attempt to connect to the database
 	db, err := DbConnect()
