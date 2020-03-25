@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 )
 
 // FoodApiService is a service that implents the logic for the FoodApiServicer
@@ -31,7 +32,7 @@ func NewFoodApiService(db *sql.DB) FoodApiServicer {
 }
 
 // GetFoodRecords - Get food records for a user and a given time range
-func (s *FoodApiService) GetFoodRecords(userId int64, startDateTime string, endDateTime string) (interface{}, error) {
+func (s *FoodApiService) GetFoodRecords(userId int64, startDateTime string, endDateTime string) (interface{}, *int, error) {
 	db := s.db
 
 	// Query the database for matching exercise records
@@ -40,8 +41,9 @@ func (s *FoodApiService) GetFoodRecords(userId int64, startDateTime string, endD
 		userId, startDateTime, endDateTime)
 	readRows, readErr := db.Query(query)
 	if readErr != nil {
+		// TODO: Interpret error and attempt to map to appropriate status code
 		log.Printf("Failed to query database: %v", readErr)
-		return nil, readErr
+		return nil, nil, readErr
 	}
 	defer readRows.Close()
 
@@ -52,8 +54,9 @@ func (s *FoodApiService) GetFoodRecords(userId int64, startDateTime string, endD
 		var timestamp string
 		readErr = readRows.Scan(&calories, &label, &timestamp)
 		if readErr != nil {
+			// TODO: Interpret error and attempt to map to appropriate status code
 			log.Printf("Failed to read row returned from query: %v", readErr)
-			return nil, readErr
+			return nil, nil, readErr
 		}
 
 		records = append(records, FoodRecord{
@@ -63,11 +66,12 @@ func (s *FoodApiService) GetFoodRecords(userId int64, startDateTime string, endD
 		})
 	}
 
-	return records, nil
+	status := http.StatusOK
+	return records, &status, nil
 }
 
 // PostFoodRecord - Add a new food record
-func (s *FoodApiService) PostFoodRecord(userId int64, foodRecord FoodRecord) (interface{}, error) {
+func (s *FoodApiService) PostFoodRecord(userId int64, foodRecord FoodRecord) (interface{}, *int, error) {
 	db := s.db
 
 	// Query the database for matching exercise records
@@ -77,8 +81,9 @@ func (s *FoodApiService) PostFoodRecord(userId int64, foodRecord FoodRecord) (in
 	_, readErr := db.Exec(query)
 	if readErr != nil {
 		log.Printf("Failed to query database: %v", readErr)
-		return nil, readErr
+		return nil, nil, readErr
 	}
 
-	return foodRecord, nil
+	status := http.StatusOK
+	return foodRecord, &status, nil
 }

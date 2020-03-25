@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 )
 
 // MetricsApiService is a service that implents the logic for the MetricsApiServicer
@@ -31,15 +32,16 @@ func NewMetricsApiService(db *sql.DB) MetricsApiServicer {
 }
 
 // GetMetrics - Get the body metrics for the user
-func (s *MetricsApiService) GetMetrics(userId int64) (interface{}, error) {
+func (s *MetricsApiService) GetMetrics(userId int64) (interface{}, *int, error) {
 	db := s.db
 
 	// Query the database for matching exercise records
 	query := fmt.Sprintf("SELECT Height, Weight, Sex, Age from Users WHERE UserID=%d;", userId)
 	readRows, readErr := db.Query(query)
 	if readErr != nil {
+		// TODO: Interpret error and attempt to map to appropriate status code
 		log.Printf("Failed to query database: %v", readErr)
-		return nil, readErr
+		return nil, nil, readErr
 	}
 	defer readRows.Close()
 
@@ -50,8 +52,9 @@ func (s *MetricsApiService) GetMetrics(userId int64) (interface{}, error) {
 	readRows.Next()
 	readErr = readRows.Scan(&height, &weight, &sex, &age)
 	if readErr != nil {
+		// TODO: Interpret error and attempt to map to appropriate status code
 		log.Printf("Failed to read row returned from query: %v", readErr)
-		return nil, readErr
+		return nil, nil, readErr
 	}
 
 	record := BodyMetrics{
@@ -61,11 +64,12 @@ func (s *MetricsApiService) GetMetrics(userId int64) (interface{}, error) {
 		Age:    age,
 	}
 
-	return record, nil
+	status := http.StatusOK
+	return record, &status, nil
 }
 
 // PutMetrics - Update body metrics for the user
-func (s *MetricsApiService) PutMetrics(userId int64, bodyMetrics BodyMetrics) (interface{}, error) {
+func (s *MetricsApiService) PutMetrics(userId int64, bodyMetrics BodyMetrics) (interface{}, *int, error) {
 	db := s.db
 
 	// Query the database for matching exercise records
@@ -74,9 +78,11 @@ func (s *MetricsApiService) PutMetrics(userId int64, bodyMetrics BodyMetrics) (i
 		userId, bodyMetrics.Height, bodyMetrics.Weight, bodyMetrics.Sex, bodyMetrics.Age)
 	_, readErr := db.Exec(query)
 	if readErr != nil {
+		// TODO: Interpret error and attempt to map to appropriate status code
 		log.Printf("Failed to query database: %v", readErr)
-		return nil, readErr
+		return nil, nil, readErr
 	}
 
-	return bodyMetrics, nil
+	status := http.StatusOK
+	return bodyMetrics, &status, nil
 }

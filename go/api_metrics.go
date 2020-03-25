@@ -25,12 +25,12 @@ type MetricsApiController struct {
 
 // NewMetricsApiController creates a default api controller
 func NewMetricsApiController(s MetricsApiServicer) Router {
-	return &MetricsApiController{ service: s }
+	return &MetricsApiController{service: s}
 }
 
 // Routes returns all of the api route for the MetricsApiController
 func (c *MetricsApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"GetMetrics",
 			strings.ToUpper("Get"),
@@ -47,43 +47,44 @@ func (c *MetricsApiController) Routes() Routes {
 }
 
 // GetMetrics - Get the body metrics for the user
-func (c *MetricsApiController) GetMetrics(w http.ResponseWriter, r *http.Request) { 
+func (c *MetricsApiController) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userId, err := parseIntParameter(params["userId"])
 	if err != nil {
-		w.WriteHeader(500)
+		// Bad Request
+		w.WriteHeader(400)
 		return
 	}
-	
-	result, err := c.service.GetMetrics(userId)
+
+	result, status, err := c.service.GetMetrics(userId)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	EncodeJSONResponse(result, nil, w)
+
+	EncodeJSONResponse(result, status, w)
 }
 
 // PutMetrics - Update body metrics for the user
-func (c *MetricsApiController) PutMetrics(w http.ResponseWriter, r *http.Request) { 
+func (c *MetricsApiController) PutMetrics(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userId, err := parseIntParameter(params["userId"])
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	bodyMetrics := &BodyMetrics{}
 	if err := json.NewDecoder(r.Body).Decode(&bodyMetrics); err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	result, err := c.service.PutMetrics(userId, *bodyMetrics)
+
+	result, status, err := c.service.PutMetrics(userId, *bodyMetrics)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	EncodeJSONResponse(result, nil, w)
+
+	EncodeJSONResponse(result, status, w)
 }

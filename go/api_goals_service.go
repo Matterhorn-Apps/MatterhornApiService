@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 )
 
 // GoalsApiService is a service that implents the logic for the GoalsApiServicer
@@ -31,15 +32,16 @@ func NewGoalsApiService(db *sql.DB) GoalsApiServicer {
 }
 
 // GetCalorieGoal - Get the calorie goal for the user
-func (s *GoalsApiService) GetCalorieGoal(userId int64) (interface{}, error) {
+func (s *GoalsApiService) GetCalorieGoal(userId int64) (interface{}, *int, error) {
 	db := s.db
 
 	// Query the database for matching exercise records
 	query := fmt.Sprintf("SELECT Calories from CalorieGoals WHERE UserID=%d;", userId)
 	readRows, readErr := db.Query(query)
 	if readErr != nil {
+		// TODO: Interpret error and attempt to map to appropriate status code
 		log.Printf("Failed to query database: %v", readErr)
-		return nil, readErr
+		return nil, nil, readErr
 	}
 	defer readRows.Close()
 
@@ -48,18 +50,19 @@ func (s *GoalsApiService) GetCalorieGoal(userId int64) (interface{}, error) {
 	readErr = readRows.Scan(&calories)
 	if readErr != nil {
 		log.Printf("Failed to read row returned from query: %v", readErr)
-		return nil, readErr
+		return nil, nil, readErr
 	}
 
 	record := CalorieGoal{
 		Calories: calories,
 	}
 
-	return record, nil
+	status := http.StatusOK
+	return record, &status, nil
 }
 
 // PutCalorieGoal - Update the calorie goal for the user
-func (s *GoalsApiService) PutCalorieGoal(userId int64, calorieGoal CalorieGoal) (interface{}, error) {
+func (s *GoalsApiService) PutCalorieGoal(userId int64, calorieGoal CalorieGoal) (interface{}, *int, error) {
 	db := s.db
 
 	// Query the database for matching exercise records
@@ -68,9 +71,11 @@ func (s *GoalsApiService) PutCalorieGoal(userId int64, calorieGoal CalorieGoal) 
 		userId, calorieGoal.Calories)
 	_, readErr := db.Exec(query)
 	if readErr != nil {
+		// TODO: Interpret error and attempt to map to appropriate status code
 		log.Printf("Failed to query database: %v", readErr)
-		return nil, readErr
+		return nil, nil, readErr
 	}
 
-	return calorieGoal, nil
+	status := http.StatusOK
+	return calorieGoal, &status, nil
 }

@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 )
 
 // ExerciseApiService is a service that implents the logic for the ExerciseApiServicer
@@ -31,7 +32,7 @@ func NewExerciseApiService(db *sql.DB) ExerciseApiServicer {
 }
 
 // GetExerciseRecords - Get exercise records for a user and a given time range
-func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime string, endDateTime string) (interface{}, error) {
+func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime string, endDateTime string) (interface{}, *int, error) {
 	db := s.db
 
 	// Query the database for matching exercise records
@@ -40,8 +41,9 @@ func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime stri
 		userId, startDateTime, endDateTime)
 	readRows, readErr := db.Query(query)
 	if readErr != nil {
+		// TODO: Interpret error and attempt to map to appropriate status code
 		log.Printf("Failed to query database: %v", readErr)
-		return nil, readErr
+		return nil, nil, readErr
 	}
 	defer readRows.Close()
 
@@ -53,7 +55,7 @@ func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime stri
 		readErr = readRows.Scan(&calories, &label, &timestamp)
 		if readErr != nil {
 			log.Printf("Failed to read row returned from query: %v", readErr)
-			return nil, readErr
+			return nil, nil, readErr
 		}
 
 		records = append(records, ExerciseRecord{
@@ -63,11 +65,12 @@ func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime stri
 		})
 	}
 
-	return records, nil
+	status := http.StatusOK
+	return records, &status, nil
 }
 
 // PostExerciseRecord - Add a new exercise record
-func (s *ExerciseApiService) PostExerciseRecord(userId int64, exerciseRecord ExerciseRecord) (interface{}, error) {
+func (s *ExerciseApiService) PostExerciseRecord(userId int64, exerciseRecord ExerciseRecord) (interface{}, *int, error) {
 	db := s.db
 
 	// Query the database for matching exercise records
@@ -76,9 +79,11 @@ func (s *ExerciseApiService) PostExerciseRecord(userId int64, exerciseRecord Exe
 		userId, exerciseRecord.Calories, exerciseRecord.Label, exerciseRecord.Timestamp)
 	_, readErr := db.Exec(query)
 	if readErr != nil {
+		// TODO: Interpret error and attempt to map to appropriate status code
 		log.Printf("Failed to query database: %v", readErr)
-		return nil, readErr
+		return nil, nil, readErr
 	}
 
-	return exerciseRecord, nil
+	status := http.StatusOK
+	return exerciseRecord, &status, nil
 }
