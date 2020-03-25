@@ -1,0 +1,6 @@
+# On pull, also pull updates to submodules
+[submodule]
+	recurse = true
+# On push, fail if local updates have been made to submodules
+[push]
+	recurseSubmodules = check
