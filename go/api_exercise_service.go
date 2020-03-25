@@ -12,6 +12,7 @@ package openapi
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 )
 
@@ -34,27 +35,35 @@ func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime stri
 	db := s.db
 
 	// Query the database for matching exercise records
-	readRows, readErr := db.Query(
-		"SELECT * from ExerciseRecords WHERE ID='%n' AND Timestamp BETWEEN '%s' AND '%s';",
+	query := fmt.Sprintf(
+		"SELECT Calories, Label, Timestamp from ExerciseRecords WHERE UserID=%d AND Timestamp BETWEEN '%s' AND '%s';",
 		userId, startDateTime, endDateTime)
+	readRows, readErr := db.Query(query)
 	if readErr != nil {
 		log.Printf("Failed to query database: %v", readErr)
 		return nil, readErr
 	}
 	defer readRows.Close()
 
-	var records []ExerciseRecord
-	var row ExerciseRecord
+	records := []ExerciseRecord{}
 	for readRows.Next() {
-		readErr = readRows.Scan(&row)
+		var calories int32
+		var label string
+		var timestamp string
+		readErr = readRows.Scan(&calories, &label, &timestamp)
 		if readErr != nil {
 			log.Printf("Failed to read row returned from query: %v", readErr)
 			return nil, readErr
 		}
 
-		records = append(records, row)
+		records = append(records, ExerciseRecord{
+			Calories:  calories,
+			Label:     label,
+			Timestamp: timestamp,
+		})
 	}
 
+	log.Printf("Returning %d records", len(records))
 	return records, nil
 }
 
@@ -63,9 +72,10 @@ func (s *ExerciseApiService) PostExerciseRecord(userId int64, exerciseRecord Exe
 	db := s.db
 
 	// Query the database for matching exercise records
-	_, readErr := db.Exec(
-		"INSERT INTO ExerciseRecords(ID, Calories, Label, Timestamp) VALUES(%n, %n, %s, %s);",
+	query := fmt.Sprintf(
+		"INSERT INTO ExerciseRecords (UserID, Calories, Label, Timestamp) VALUES (%d, %d, '%s', '%s');",
 		userId, exerciseRecord.Calories, exerciseRecord.Label, exerciseRecord.Timestamp)
+	_, readErr := db.Exec(query)
 	if readErr != nil {
 		log.Printf("Failed to query database: %v", readErr)
 		return nil, readErr
