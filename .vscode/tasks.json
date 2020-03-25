@@ -23,6 +23,22 @@
             "command": "go clean"
         },
         {
+            "label": "Generate Server Stubs",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run", "--rm",
+                "-v", "${PWD}:/local",
+                "openapitools/openapi-generator-cli", "generate",
+                "-i", "/local/submodules/MatterhornApiSpec/specs/0.1.0.yaml",
+                "-g", "go-server", 
+                "-o", "/local/",
+                "--type-mappings=DateTime=string",
+                "--git-user-id", "Matterhorn-Apps",
+                "--git-repo-id", "MatterhornApiService"
+            ]
+        },
+        {
             "label": "Run Server",
             "type": "shell",
             "command": "go run ."

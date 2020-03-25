@@ -1,0 +1,405 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: ozinoveva@gmail.com
+  description: Draft spec for the Matterhorn POC
+  license:
+    name: Unlicensed
+  title: Matterhorn API
+  version: 0.1.0
+servers:
+- url: /
+tags:
+- description: Operations for managing Counter data
+  name: counters
+- description: Operations for managing Exercise data
+  name: exercise
+- description: Operations for managing Food data
+  name: food
+- description: Operations for managing Goals data
+  name: goals
+- description: Operations for managing Metrics data
+  name: metrics
+paths:
+  /counter:
+    get:
+      operationId: getCounter
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Counter'
+          description: successful operation
+      summary: Get the current counter value and increment it
+      tags:
+      - counters
+  /user/{userId}/exercise:
+    get:
+      operationId: getExerciseRecords
+      parameters:
+      - description: User ID associated with these exercise records
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      - description: Start of the date-time range associated with requested exercise
+          records
+        explode: true
+        in: query
+        name: startDateTime
+        required: true
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: End of the date-time range associated with requested exercise
+          records
+        explode: true
+        in: query
+        name: endDateTime
+        required: true
+        schema:
+          format: date-time
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ExerciseRecord'
+                type: array
+          description: Successful exercise record retrieval operation
+        "404":
+          description: User not found
+        "400":
+          description: Time range invalid
+      summary: Get exercise records for a user and a given time range
+      tags:
+      - exercise
+    post:
+      operationId: postExerciseRecord
+      parameters:
+      - description: User ID associated with these exercise records
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExerciseRecord'
+        description: Exercise record to add to the log
+        required: true
+      responses:
+        "204":
+          description: Successful exercise add operation
+        "404":
+          description: User not found
+      summary: Add a new exercise record
+      tags:
+      - exercise
+  /user/{userId}/food:
+    get:
+      operationId: getFoodRecords
+      parameters:
+      - description: User ID associated with these food records
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      - description: Start of the date-time range associated with requested food records
+        explode: true
+        in: query
+        name: startDateTime
+        required: true
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: End of the date-time range associated with requested food records
+        explode: true
+        in: query
+        name: endDateTime
+        required: true
+        schema:
+          format: date-time
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/FoodRecord'
+                type: array
+          description: Successful food record retrieval operation
+        "404":
+          description: User not found
+        "400":
+          description: Time range invalid
+      summary: Get food records for a user and a given time range
+      tags:
+      - food
+    post:
+      operationId: postFoodRecord
+      parameters:
+      - description: User ID associated with these food records
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FoodRecord'
+        description: Food record to add to the log
+        required: true
+      responses:
+        "204":
+          description: Successful food add operation
+        "404":
+          description: User not found
+      summary: Add a new food record
+      tags:
+      - food
+  /user/{userId}/calorieGoal:
+    get:
+      operationId: getCalorieGoal
+      parameters:
+      - description: User ID associated with this calorie goal
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalorieGoal'
+          description: Successful calorie goal retrieval operation
+        "404":
+          description: User not found
+      summary: Get the calorie goal for the user
+      tags:
+      - goals
+    put:
+      operationId: putCalorieGoal
+      parameters:
+      - description: User ID associated with this calorie goal
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalorieGoal'
+        description: Updated calorie goal
+        required: true
+      responses:
+        "204":
+          description: Successful calorie goal update operation
+        "404":
+          description: User not found
+        "400":
+          description: Invalid calorie goal provided
+      summary: Update the calorie goal for the user
+      tags:
+      - goals
+  /user/{userId}/metrics:
+    get:
+      operationId: getMetrics
+      parameters:
+      - description: User ID associated with this calorie goal
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyMetrics'
+          description: Successful body metrics retrieval operation
+        "404":
+          description: User not found
+      summary: Get the body metrics for the user
+      tags:
+      - metrics
+    put:
+      operationId: putMetrics
+      parameters:
+      - description: User ID associated with this calorie goal
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BodyMetrics'
+        description: Updated metrics
+        required: true
+      responses:
+        "204":
+          description: Successful body metrics update operation
+        "404":
+          description: User not found
+        "400":
+          description: Invalid body metrics format
+      summary: Update body metrics for the user
+      tags:
+      - metrics
+components:
+  schemas:
+    BodyMetrics:
+      example:
+        sex: sex
+        weight: 6.0274563
+        age: 1
+        height: 0
+      properties:
+        height:
+          description: Height in inches
+          format: int64
+          type: integer
+        weight:
+          description: Weight in pounds
+          format: float
+          type: number
+        sex:
+          type: string
+        age:
+          description: Age in years
+          format: int32
+          type: integer
+      required:
+      - age
+      - height
+      - sex
+      - weight
+      type: object
+    CalorieGoal:
+      example:
+        calories: 2000
+      properties:
+        calories:
+          description: Target number of daily calories
+          format: int64
+          type: integer
+      required:
+      - calories
+      type: object
+    FoodRecord:
+      example:
+        calories: 0
+        label: label
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        calories:
+          description: Calories in this food record
+          format: int32
+          type: integer
+        label:
+          description: Optional name or label for this food
+          type: string
+        timestamp:
+          format: date-time
+          type: string
+      required:
+      - calories
+      - timestamp
+      type: object
+    ExerciseRecord:
+      example:
+        calories: 0
+        label: label
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        calories:
+          description: Calories in this exercise record
+          format: int32
+          type: integer
+        label:
+          description: Optional name or label for this exercise
+          type: string
+        timestamp:
+          format: date-time
+          type: string
+      required:
+      - calories
+      - timestamp
+      type: object
+    Counter:
+      example:
+        Value: 6
+        ID: 0
+      properties:
+        ID:
+          description: Unique identifier for the returned counter
+          format: int64
+          type: integer
+        Value:
+          description: Current value of the counter
+          format: int64
+          type: integer
+      required:
+      - ID
+      - Value
+      type: object
+      xml:
+        name: Counter
+  securitySchemes:
+    matterhorn_auth:
+      flows:
+        implicit:
+          authorizationUrl: TODO_POPULATE_THIS
+          scopes:
+            api: Access Matterhorn API
+      type: oauth2
+    api_key:
+      in: header
+      name: api_key
+      type: apiKey
