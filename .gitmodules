@@ -1,0 +1,3 @@
+[submodule "submodules/MatterhornApiSpec"]
+	path = submodules/MatterhornApiSpec
+	url = https://github.com/Matterhorn-Apps/MatterhornApiSpec
