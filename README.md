@@ -31,7 +31,7 @@ Use the Go CLI to execute unit tests.
 `go test`
 
 ## Adding new APIs
-MatterhornApiService follows a spec-first approach to defining API endpoints. To add, remove, or modify an API, first update the OpenAPI spec in `api/openapi.yaml`. Next, execute the VSCode task named "Generate Server Stubs". This will regenerate server stubs based on the updated OpenAPI spec without overwriting any existing implementation (as configured in `.openapi-generator-ignore`). You will need to modify `main.go` to create your *Service and *Controller structs and initialize them with any injected dependencies.
+MatterhornApiService follows a spec-first approach to defining API endpoints. To add, remove, or modify an API, first add a new version of the OpenAPI spec in [MatterhornApiSpec](https://github.com/Matterhorn-Apps/MatterhornApiSpec) (this repository is included by MatterhornApiService as a submodule). Next, update the VSCode task named "Generate Server Stubs" to use your intended version of the spec and execute it. This will regenerate server stubs based on the updated OpenAPI spec without overwriting any existing implementation (as configured in `.openapi-generator-ignore`). You will need to modify `main.go` to create your *Service and *Controller structs and initialize them with any injected dependencies.
 
 ## CI/CD
 MatterhornApiService is configured to deploy to AWS Elastic Beanstalk. `Buildfile`, and `Procfile` are provided to describe how to run and build the application to Elastic Beanstalk. Before running the application, Elastic Beanstalk will execute the `build.sh` script; this is done instead of deploying a pre-compiled binary because it needs to be compiled for the OS and architecture of the target host.
