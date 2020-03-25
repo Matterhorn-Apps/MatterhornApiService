@@ -11,30 +11,74 @@
 package openapi
 
 import (
-	"errors"
+	"database/sql"
+	"fmt"
+	"log"
 )
 
 // FoodApiService is a service that implents the logic for the FoodApiServicer
-// This service should implement the business logic for every endpoint for the FoodApi API. 
+// This service should implement the business logic for every endpoint for the FoodApi API.
 // Include any external packages or services that will be required by this service.
 type FoodApiService struct {
+	db *sql.DB
 }
 
 // NewFoodApiService creates a default api service
-func NewFoodApiService() FoodApiServicer {
-	return &FoodApiService{}
+func NewFoodApiService(db *sql.DB) FoodApiServicer {
+	return &FoodApiService{
+		db: db,
+	}
 }
 
 // GetFoodRecords - Get food records for a user and a given time range
 func (s *FoodApiService) GetFoodRecords(userId int64, startDateTime string, endDateTime string) (interface{}, error) {
-	// TODO - update GetFoodRecords with the required logic for this service method.
-	// Add api_food_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'GetFoodRecords' not implemented")
+	db := s.db
+
+	// Query the database for matching exercise records
+	query := fmt.Sprintf(
+		"SELECT Calories, Label, Timestamp from FoodRecords WHERE UserID=%d AND Timestamp BETWEEN '%s' AND '%s';",
+		userId, startDateTime, endDateTime)
+	readRows, readErr := db.Query(query)
+	if readErr != nil {
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+	defer readRows.Close()
+
+	records := []FoodRecord{}
+	for readRows.Next() {
+		var calories int32
+		var label string
+		var timestamp string
+		readErr = readRows.Scan(&calories, &label, &timestamp)
+		if readErr != nil {
+			log.Printf("Failed to read row returned from query: %v", readErr)
+			return nil, readErr
+		}
+
+		records = append(records, FoodRecord{
+			Calories:  calories,
+			Label:     label,
+			Timestamp: timestamp,
+		})
+	}
+
+	return records, nil
 }
 
 // PostFoodRecord - Add a new food record
 func (s *FoodApiService) PostFoodRecord(userId int64, foodRecord FoodRecord) (interface{}, error) {
-	// TODO - update PostFoodRecord with the required logic for this service method.
-	// Add api_food_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'PostFoodRecord' not implemented")
+	db := s.db
+
+	// Query the database for matching exercise records
+	query := fmt.Sprintf(
+		"INSERT INTO FoodRecords (UserID, Calories, Label, Timestamp) VALUES (%d, %d, '%s', '%s');",
+		userId, foodRecord.Calories, foodRecord.Label, foodRecord.Timestamp)
+	_, readErr := db.Exec(query)
+	if readErr != nil {
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+
+	return foodRecord, nil
 }

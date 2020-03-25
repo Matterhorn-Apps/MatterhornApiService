@@ -39,13 +39,13 @@ func main() {
 	ExerciseApiService := openapi.NewExerciseApiService(db)
 	ExerciseApiController := openapi.NewExerciseApiController(ExerciseApiService)
 
-	FoodApiService := openapi.NewFoodApiService()
+	FoodApiService := openapi.NewFoodApiService(db)
 	FoodApiController := openapi.NewFoodApiController(FoodApiService)
 
-	GoalsApiService := openapi.NewGoalsApiService()
+	GoalsApiService := openapi.NewGoalsApiService(db)
 	GoalsApiController := openapi.NewGoalsApiController(GoalsApiService)
 
-	MetricsApiService := openapi.NewMetricsApiService()
+	MetricsApiService := openapi.NewMetricsApiService(db)
 	MetricsApiController := openapi.NewMetricsApiController(MetricsApiService)
 
 	router := openapi.NewRouter(CountersApiController, ExerciseApiController, FoodApiController, GoalsApiController, MetricsApiController)

@@ -63,7 +63,6 @@ func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime stri
 		})
 	}
 
-	log.Printf("Returning %d records", len(records))
 	return records, nil
 }
 

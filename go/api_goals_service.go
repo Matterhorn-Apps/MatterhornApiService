@@ -11,30 +11,66 @@
 package openapi
 
 import (
-	"errors"
+	"database/sql"
+	"fmt"
+	"log"
 )
 
 // GoalsApiService is a service that implents the logic for the GoalsApiServicer
-// This service should implement the business logic for every endpoint for the GoalsApi API. 
+// This service should implement the business logic for every endpoint for the GoalsApi API.
 // Include any external packages or services that will be required by this service.
 type GoalsApiService struct {
+	db *sql.DB
 }
 
 // NewGoalsApiService creates a default api service
-func NewGoalsApiService() GoalsApiServicer {
-	return &GoalsApiService{}
+func NewGoalsApiService(db *sql.DB) GoalsApiServicer {
+	return &GoalsApiService{
+		db: db,
+	}
 }
 
 // GetCalorieGoal - Get the calorie goal for the user
 func (s *GoalsApiService) GetCalorieGoal(userId int64) (interface{}, error) {
-	// TODO - update GetCalorieGoal with the required logic for this service method.
-	// Add api_goals_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'GetCalorieGoal' not implemented")
+	db := s.db
+
+	// Query the database for matching exercise records
+	query := fmt.Sprintf("SELECT Calories from CalorieGoals WHERE UserID=%d;", userId)
+	readRows, readErr := db.Query(query)
+	if readErr != nil {
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+	defer readRows.Close()
+
+	var calories int64
+	readRows.Next()
+	readErr = readRows.Scan(&calories)
+	if readErr != nil {
+		log.Printf("Failed to read row returned from query: %v", readErr)
+		return nil, readErr
+	}
+
+	record := CalorieGoal{
+		Calories: calories,
+	}
+
+	return record, nil
 }
 
 // PutCalorieGoal - Update the calorie goal for the user
 func (s *GoalsApiService) PutCalorieGoal(userId int64, calorieGoal CalorieGoal) (interface{}, error) {
-	// TODO - update PutCalorieGoal with the required logic for this service method.
-	// Add api_goals_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'PutCalorieGoal' not implemented")
+	db := s.db
+
+	// Query the database for matching exercise records
+	query := fmt.Sprintf(
+		"INSERT INTO CalorieGoals (UserID, Calories) VALUES (%d, %d) ON DUPLICATE KEY UPDATE Calories = %[2]d;",
+		userId, calorieGoal.Calories)
+	_, readErr := db.Exec(query)
+	if readErr != nil {
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+
+	return calorieGoal, nil
 }

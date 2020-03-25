@@ -11,30 +11,72 @@
 package openapi
 
 import (
-	"errors"
+	"database/sql"
+	"fmt"
+	"log"
 )
 
 // MetricsApiService is a service that implents the logic for the MetricsApiServicer
-// This service should implement the business logic for every endpoint for the MetricsApi API. 
+// This service should implement the business logic for every endpoint for the MetricsApi API.
 // Include any external packages or services that will be required by this service.
 type MetricsApiService struct {
+	db *sql.DB
 }
 
 // NewMetricsApiService creates a default api service
-func NewMetricsApiService() MetricsApiServicer {
-	return &MetricsApiService{}
+func NewMetricsApiService(db *sql.DB) MetricsApiServicer {
+	return &MetricsApiService{
+		db: db,
+	}
 }
 
 // GetMetrics - Get the body metrics for the user
 func (s *MetricsApiService) GetMetrics(userId int64) (interface{}, error) {
-	// TODO - update GetMetrics with the required logic for this service method.
-	// Add api_metrics_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'GetMetrics' not implemented")
+	db := s.db
+
+	// Query the database for matching exercise records
+	query := fmt.Sprintf("SELECT Height, Weight, Sex, Age from Users WHERE UserID=%d;", userId)
+	readRows, readErr := db.Query(query)
+	if readErr != nil {
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+	defer readRows.Close()
+
+	var height int64
+	var weight float32
+	var sex string
+	var age int32
+	readRows.Next()
+	readErr = readRows.Scan(&height, &weight, &sex, &age)
+	if readErr != nil {
+		log.Printf("Failed to read row returned from query: %v", readErr)
+		return nil, readErr
+	}
+
+	record := BodyMetrics{
+		Height: height,
+		Weight: weight,
+		Sex:    sex,
+		Age:    age,
+	}
+
+	return record, nil
 }
 
 // PutMetrics - Update body metrics for the user
 func (s *MetricsApiService) PutMetrics(userId int64, bodyMetrics BodyMetrics) (interface{}, error) {
-	// TODO - update PutMetrics with the required logic for this service method.
-	// Add api_metrics_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'PutMetrics' not implemented")
+	db := s.db
+
+	// Query the database for matching exercise records
+	query := fmt.Sprintf(
+		"UPDATE Users SET Height = %[2]d, Weight = %[3]f, Sex = '%[4]s', Age = %[5]d WHERE UserID = %[1]d",
+		userId, bodyMetrics.Height, bodyMetrics.Weight, bodyMetrics.Sex, bodyMetrics.Age)
+	_, readErr := db.Exec(query)
+	if readErr != nil {
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+
+	return bodyMetrics, nil
 }
