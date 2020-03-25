@@ -11,30 +11,65 @@
 package openapi
 
 import (
-	"errors"
+	"database/sql"
+	"log"
 )
 
 // ExerciseApiService is a service that implents the logic for the ExerciseApiServicer
-// This service should implement the business logic for every endpoint for the ExerciseApi API. 
+// This service should implement the business logic for every endpoint for the ExerciseApi API.
 // Include any external packages or services that will be required by this service.
 type ExerciseApiService struct {
+	db *sql.DB
 }
 
 // NewExerciseApiService creates a default api service
-func NewExerciseApiService() ExerciseApiServicer {
-	return &ExerciseApiService{}
+func NewExerciseApiService(db *sql.DB) ExerciseApiServicer {
+	return &ExerciseApiService{
+		db: db,
+	}
 }
 
 // GetExerciseRecords - Get exercise records for a user and a given time range
 func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime string, endDateTime string) (interface{}, error) {
-	// TODO - update GetExerciseRecords with the required logic for this service method.
-	// Add api_exercise_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'GetExerciseRecords' not implemented")
+	db := s.db
+
+	// Query the database for matching exercise records
+	readRows, readErr := db.Query(
+		"SELECT * from ExerciseRecords WHERE ID='%n' AND Timestamp BETWEEN '%s' AND '%s';",
+		userId, startDateTime, endDateTime)
+	if readErr != nil {
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+	defer readRows.Close()
+
+	var records []ExerciseRecord
+	var row ExerciseRecord
+	for readRows.Next() {
+		readErr = readRows.Scan(&row)
+		if readErr != nil {
+			log.Printf("Failed to read row returned from query: %v", readErr)
+			return nil, readErr
+		}
+
+		records = append(records, row)
+	}
+
+	return records, nil
 }
 
 // PostExerciseRecord - Add a new exercise record
 func (s *ExerciseApiService) PostExerciseRecord(userId int64, exerciseRecord ExerciseRecord) (interface{}, error) {
-	// TODO - update PostExerciseRecord with the required logic for this service method.
-	// Add api_exercise_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'PostExerciseRecord' not implemented")
+	db := s.db
+
+	// Query the database for matching exercise records
+	_, readErr := db.Exec(
+		"INSERT INTO ExerciseRecords(ID, Calories, Label, Timestamp) VALUES(%n, %n, %s, %s);",
+		userId, exerciseRecord.Calories, exerciseRecord.Label, exerciseRecord.Timestamp)
+	if readErr != nil {
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+
+	return exerciseRecord, nil
 }

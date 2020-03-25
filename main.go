@@ -36,7 +36,7 @@ func main() {
 	CountersApiService := openapi.NewCountersApiService(db)
 	CountersApiController := openapi.NewCountersApiController(CountersApiService)
 
-	ExerciseApiService := openapi.NewExerciseApiService()
+	ExerciseApiService := openapi.NewExerciseApiService(db)
 	ExerciseApiController := openapi.NewExerciseApiController(ExerciseApiService)
 
 	FoodApiService := openapi.NewFoodApiService()
