@@ -25,12 +25,12 @@ type ExerciseApiController struct {
 
 // NewExerciseApiController creates a default api controller
 func NewExerciseApiController(s ExerciseApiServicer) Router {
-	return &ExerciseApiController{ service: s }
+	return &ExerciseApiController{service: s}
 }
 
 // Routes returns all of the api route for the ExerciseApiController
 func (c *ExerciseApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"GetExerciseRecords",
 			strings.ToUpper("Get"),
@@ -47,46 +47,47 @@ func (c *ExerciseApiController) Routes() Routes {
 }
 
 // GetExerciseRecords - Get exercise records for a user and a given time range
-func (c *ExerciseApiController) GetExerciseRecords(w http.ResponseWriter, r *http.Request) { 
+func (c *ExerciseApiController) GetExerciseRecords(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	query := r.URL.Query()
 	userId, err := parseIntParameter(params["userId"])
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(400)
 		return
 	}
-	
+
 	startDateTime := query.Get("startDateTime")
 	endDateTime := query.Get("endDateTime")
-	result, err := c.service.GetExerciseRecords(userId, startDateTime, endDateTime)
+	result, status, err := c.service.GetExerciseRecords(userId, startDateTime, endDateTime)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	EncodeJSONResponse(result, nil, w)
+
+	EncodeJSONResponse(result, status, w)
 }
 
 // PostExerciseRecord - Add a new exercise record
-func (c *ExerciseApiController) PostExerciseRecord(w http.ResponseWriter, r *http.Request) { 
+func (c *ExerciseApiController) PostExerciseRecord(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userId, err := parseIntParameter(params["userId"])
 	if err != nil {
-		w.WriteHeader(500)
+		// Bad Request
+		w.WriteHeader(400)
 		return
 	}
-	
+
 	exerciseRecord := &ExerciseRecord{}
 	if err := json.NewDecoder(r.Body).Decode(&exerciseRecord); err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	result, err := c.service.PostExerciseRecord(userId, *exerciseRecord)
+
+	result, status, err := c.service.PostExerciseRecord(userId, *exerciseRecord)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	EncodeJSONResponse(result, nil, w)
+
+	EncodeJSONResponse(result, status, w)
 }

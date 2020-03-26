@@ -33,6 +33,7 @@
                 "-i", "/local/submodules/MatterhornApiSpec/specs/0.1.0.yaml",
                 "-g", "go-server", 
                 "-o", "/local/",
+                "-p", "serverPort=5000",
                 "--type-mappings=DateTime=string",
                 "--git-user-id", "Matterhorn-Apps",
                 "--git-repo-id", "MatterhornApiService"

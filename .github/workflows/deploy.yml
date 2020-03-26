@@ -28,7 +28,7 @@ jobs:
       env:
         MATTERHORN_DB_PASSWORD: ${{ secrets.MATTERHORN_DB_PASSWORD }}
         MATTERHORN_ENV: dev
-      run: go test
+      run: go test ./...
 
     # Pack compiled binary into zip file
     - name: Pack

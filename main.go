@@ -14,6 +14,8 @@ import (
 	"log"
 	"net/http"
 
+	database "github.com/Matterhorn-Apps/MatterhornApiService/database"
+	environment "github.com/Matterhorn-Apps/MatterhornApiService/environment"
 	openapi "github.com/Matterhorn-Apps/MatterhornApiService/go"
 )
 
@@ -21,34 +23,40 @@ func main() {
 	log.Printf("Server started")
 
 	// Load environment variables
-	LoadEnv()
+	environment.LoadEnv(".")
 
 	// Connect to database
-	db, err := DbConnect()
+	db, err := database.DbConnect()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
 	// Migrate database if necessary
-	Migrate(db)
+	database.Migrate(db)
 
 	CountersApiService := openapi.NewCountersApiService(db)
 	CountersApiController := openapi.NewCountersApiController(CountersApiService)
 
-	ExerciseApiService := openapi.NewExerciseApiService()
+	ExerciseApiService := openapi.NewExerciseApiService(db)
 	ExerciseApiController := openapi.NewExerciseApiController(ExerciseApiService)
 
-	FoodApiService := openapi.NewFoodApiService()
+	FoodApiService := openapi.NewFoodApiService(db)
 	FoodApiController := openapi.NewFoodApiController(FoodApiService)
 
-	GoalsApiService := openapi.NewGoalsApiService()
+	GoalsApiService := openapi.NewGoalsApiService(db)
 	GoalsApiController := openapi.NewGoalsApiController(GoalsApiService)
 
-	MetricsApiService := openapi.NewMetricsApiService()
+	MetricsApiService := openapi.NewMetricsApiService(db)
 	MetricsApiController := openapi.NewMetricsApiController(MetricsApiService)
 
 	router := openapi.NewRouter(CountersApiController, ExerciseApiController, FoodApiController, GoalsApiController, MetricsApiController)
+
+	apiFs := http.FileServer(http.Dir("./api/"))
+	router.PathPrefix("/api/").Handler(http.StripPrefix("/api/", apiFs))
+
+	swaggerUiFs := http.FileServer(http.Dir("./swaggerui/"))
+	router.PathPrefix("/swaggerui/").Handler(http.StripPrefix("/swaggerui/", swaggerUiFs))
 
 	log.Fatal(http.ListenAndServe(":5000", router))
 }

@@ -11,30 +11,101 @@
 package openapi
 
 import (
-	"errors"
+	"database/sql"
+	"fmt"
+	"log"
+	"net/http"
+
+	database "github.com/Matterhorn-Apps/MatterhornApiService/database"
 )
 
 // ExerciseApiService is a service that implents the logic for the ExerciseApiServicer
-// This service should implement the business logic for every endpoint for the ExerciseApi API. 
+// This service should implement the business logic for every endpoint for the ExerciseApi API.
 // Include any external packages or services that will be required by this service.
 type ExerciseApiService struct {
+	db *sql.DB
 }
 
 // NewExerciseApiService creates a default api service
-func NewExerciseApiService() ExerciseApiServicer {
-	return &ExerciseApiService{}
+func NewExerciseApiService(db *sql.DB) ExerciseApiServicer {
+	return &ExerciseApiService{
+		db: db,
+	}
 }
 
 // GetExerciseRecords - Get exercise records for a user and a given time range
-func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime string, endDateTime string) (interface{}, error) {
-	// TODO - update GetExerciseRecords with the required logic for this service method.
-	// Add api_exercise_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'GetExerciseRecords' not implemented")
+func (s *ExerciseApiService) GetExerciseRecords(userId int64, startDateTime string, endDateTime string) (interface{}, *int, error) {
+	db := s.db
+
+	// Query the database for matching exercise records
+	query := fmt.Sprintf(
+		"SELECT Calories, Label, Timestamp from ExerciseRecords WHERE UserID=%d AND Timestamp BETWEEN '%s' AND '%s';",
+		userId, startDateTime, endDateTime)
+	readRows, readErr := db.Query(query)
+	if readErr != nil {
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1292:
+				// Time range invalid
+				status := http.StatusBadRequest
+				return nil, &status, readErr
+			}
+		}
+
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, nil, readErr
+	}
+	defer readRows.Close()
+
+	records := []ExerciseRecord{}
+	for readRows.Next() {
+		var calories int32
+		var label string
+		var timestamp string
+		readErr = readRows.Scan(&calories, &label, &timestamp)
+		if readErr != nil {
+			log.Printf("Failed to read row returned from query: %v", readErr)
+			return nil, nil, readErr
+		}
+
+		records = append(records, ExerciseRecord{
+			Calories:  calories,
+			Label:     label,
+			Timestamp: timestamp,
+		})
+	}
+
+	status := http.StatusOK
+	return records, &status, nil
 }
 
 // PostExerciseRecord - Add a new exercise record
-func (s *ExerciseApiService) PostExerciseRecord(userId int64, exerciseRecord ExerciseRecord) (interface{}, error) {
-	// TODO - update PostExerciseRecord with the required logic for this service method.
-	// Add api_exercise_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'PostExerciseRecord' not implemented")
+func (s *ExerciseApiService) PostExerciseRecord(userId int64, exerciseRecord ExerciseRecord) (interface{}, *int, error) {
+	db := s.db
+
+	// Query the database for matching exercise records
+	query := fmt.Sprintf(
+		"INSERT INTO ExerciseRecords (UserID, Calories, Label, Timestamp) VALUES (%d, %d, '%s', '%s');",
+		userId, exerciseRecord.Calories, exerciseRecord.Label, exerciseRecord.Timestamp)
+	_, readErr := db.Exec(query)
+	if readErr != nil {
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1292:
+				// Timestamp invalid
+				status := http.StatusBadRequest
+				return nil, &status, readErr
+			case 1452:
+				// User not found
+				status := http.StatusNotFound
+				return nil, &status, readErr
+			}
+		}
+
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, nil, readErr
+	}
+
+	status := http.StatusOK
+	return exerciseRecord, &status, nil
 }

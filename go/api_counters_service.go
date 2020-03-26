@@ -48,7 +48,7 @@ func (s *CountersApiService) GetCounter() (interface{}, error) {
 	readRows.Scan(&value)
 
 	// Query the database to update the counter value
-	updateRows, updateErr := db.Query(fmt.Sprintf("UPDATE Counters SET Value='%d' WHERE ID='%d'", value+1, 1))
+	updateRows, updateErr := db.Query(fmt.Sprintf("UPDATE Counters SET Value='%d' WHERE ID='%d';", value+1, 1))
 	if updateErr != nil {
 		log.Printf("Failed to update counter value: %v", updateErr)
 		return nil, updateErr

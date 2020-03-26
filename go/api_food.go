@@ -25,12 +25,12 @@ type FoodApiController struct {
 
 // NewFoodApiController creates a default api controller
 func NewFoodApiController(s FoodApiServicer) Router {
-	return &FoodApiController{ service: s }
+	return &FoodApiController{service: s}
 }
 
 // Routes returns all of the api route for the FoodApiController
 func (c *FoodApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"GetFoodRecords",
 			strings.ToUpper("Get"),
@@ -47,46 +47,47 @@ func (c *FoodApiController) Routes() Routes {
 }
 
 // GetFoodRecords - Get food records for a user and a given time range
-func (c *FoodApiController) GetFoodRecords(w http.ResponseWriter, r *http.Request) { 
+func (c *FoodApiController) GetFoodRecords(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	query := r.URL.Query()
 	userId, err := parseIntParameter(params["userId"])
 	if err != nil {
-		w.WriteHeader(500)
+		// Bad Request
+		w.WriteHeader(400)
 		return
 	}
-	
+
 	startDateTime := query.Get("startDateTime")
 	endDateTime := query.Get("endDateTime")
-	result, err := c.service.GetFoodRecords(userId, startDateTime, endDateTime)
+	result, status, err := c.service.GetFoodRecords(userId, startDateTime, endDateTime)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	EncodeJSONResponse(result, nil, w)
+
+	EncodeJSONResponse(result, status, w)
 }
 
 // PostFoodRecord - Add a new food record
-func (c *FoodApiController) PostFoodRecord(w http.ResponseWriter, r *http.Request) { 
+func (c *FoodApiController) PostFoodRecord(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userId, err := parseIntParameter(params["userId"])
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	foodRecord := &FoodRecord{}
 	if err := json.NewDecoder(r.Body).Decode(&foodRecord); err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	result, err := c.service.PostFoodRecord(userId, *foodRecord)
+
+	result, status, err := c.service.PostFoodRecord(userId, *foodRecord)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	EncodeJSONResponse(result, nil, w)
+
+	EncodeJSONResponse(result, status, w)
 }

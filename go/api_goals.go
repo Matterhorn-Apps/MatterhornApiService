@@ -25,12 +25,12 @@ type GoalsApiController struct {
 
 // NewGoalsApiController creates a default api controller
 func NewGoalsApiController(s GoalsApiServicer) Router {
-	return &GoalsApiController{ service: s }
+	return &GoalsApiController{service: s}
 }
 
 // Routes returns all of the api route for the GoalsApiController
 func (c *GoalsApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"GetCalorieGoal",
 			strings.ToUpper("Get"),
@@ -47,43 +47,44 @@ func (c *GoalsApiController) Routes() Routes {
 }
 
 // GetCalorieGoal - Get the calorie goal for the user
-func (c *GoalsApiController) GetCalorieGoal(w http.ResponseWriter, r *http.Request) { 
+func (c *GoalsApiController) GetCalorieGoal(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userId, err := parseIntParameter(params["userId"])
 	if err != nil {
-		w.WriteHeader(500)
+		// Bad Request
+		w.WriteHeader(400)
 		return
 	}
-	
-	result, err := c.service.GetCalorieGoal(userId)
+
+	result, status, err := c.service.GetCalorieGoal(userId)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	EncodeJSONResponse(result, nil, w)
+
+	EncodeJSONResponse(result, status, w)
 }
 
 // PutCalorieGoal - Update the calorie goal for the user
-func (c *GoalsApiController) PutCalorieGoal(w http.ResponseWriter, r *http.Request) { 
+func (c *GoalsApiController) PutCalorieGoal(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userId, err := parseIntParameter(params["userId"])
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	calorieGoal := &CalorieGoal{}
 	if err := json.NewDecoder(r.Body).Decode(&calorieGoal); err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	result, err := c.service.PutCalorieGoal(userId, *calorieGoal)
+
+	result, status, err := c.service.PutCalorieGoal(userId, *calorieGoal)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
-	EncodeJSONResponse(result, nil, w)
+
+	EncodeJSONResponse(result, status, w)
 }
