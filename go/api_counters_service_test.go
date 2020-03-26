@@ -14,8 +14,9 @@ func TestGetCounter(t *testing.T) {
 	}
 	defer db.Close()
 
-	mock.ExpectQuery("SELECT Value from Counters WHERE ID='1';").WillReturnRows(sqlmock.NewRows([]string{"Value"}).AddRow(66))
-	mock.ExpectQuery("UPDATE Counters SET Value='67' WHERE ID='1';").WillReturnRows(sqlmock.NewRows([]string{"ID", "Value"}).AddRow(1, 67))
+	counterValue := 66
+	mock.ExpectQuery("SELECT Value from Counters WHERE ID='1';").WillReturnRows(sqlmock.NewRows([]string{"Value"}).AddRow(counterValue))
+	mock.ExpectQuery("UPDATE Counters SET Value='67' WHERE ID='1';").WillReturnRows(sqlmock.NewRows([]string{"ID", "Value"}).AddRow(1, counterValue+1))
 
 	service := CountersApiService{
 		db: db,
