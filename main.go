@@ -23,7 +23,7 @@ func main() {
 	log.Printf("Server started")
 
 	// Load environment variables
-	environment.LoadEnv()
+	environment.LoadEnv(".")
 
 	// Connect to database
 	db, err := database.DbConnect()

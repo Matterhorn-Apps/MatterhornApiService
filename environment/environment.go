@@ -9,7 +9,7 @@ import (
 
 // LoadEnv loads environment variables defined in .env* files
 // associated with the current environment
-func LoadEnv() {
+func LoadEnv(relPath string) {
 	env := os.Getenv("MATTERHORN_ENV")
 	if "" == env {
 		// Default to "local"
@@ -17,13 +17,13 @@ func LoadEnv() {
 	}
 
 	// Environment-specific configuration
-	err := godotenv.Load(".env." + env)
+	err := godotenv.Load(relPath + "/.env." + env)
 	if err != nil {
 		log.Fatalf("Failed to load configuration from .env.%s: %v", env, err)
 	}
 
 	// Global configuration (lower priority)
-	err = godotenv.Load()
+	err = godotenv.Load(relPath + "/.env")
 	if err != nil {
 		log.Fatalf("Failed to load configuration from .env: %v", err)
 	}
