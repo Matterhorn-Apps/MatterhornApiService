@@ -56,8 +56,7 @@ func main() {
 	apiFs := http.FileServer(http.Dir("./api/"))
 	router.PathPrefix("/api/").Handler(http.StripPrefix("/api/", apiFs))
 
-	enableSwaggerValue := os.Getenv("ENABLE_SWAGGER_UI")
-	if enableSwaggerValue == "1" {
+	if os.Getenv("MATTERHORN_ENV") == "local" {
 		swaggerUiFs := http.FileServer(http.Dir("./swaggerui/"))
 		router.PathPrefix("/swaggerui/").Handler(http.StripPrefix("/swaggerui/", swaggerUiFs))
 	}
