@@ -13,6 +13,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	database "github.com/Matterhorn-Apps/MatterhornApiService/database"
 	environment "github.com/Matterhorn-Apps/MatterhornApiService/environment"
@@ -55,8 +56,11 @@ func main() {
 	apiFs := http.FileServer(http.Dir("./api/"))
 	router.PathPrefix("/api/").Handler(http.StripPrefix("/api/", apiFs))
 
-	swaggerUiFs := http.FileServer(http.Dir("./swaggerui/"))
-	router.PathPrefix("/swaggerui/").Handler(http.StripPrefix("/swaggerui/", swaggerUiFs))
+	enableSwaggerValue := os.Getenv("ENABLE_SWAGGER_UI")
+	if enableSwaggerValue == "1" {
+		swaggerUiFs := http.FileServer(http.Dir("./swaggerui/"))
+		router.PathPrefix("/swaggerui/").Handler(http.StripPrefix("/swaggerui/", swaggerUiFs))
+	}
 
 	log.Fatal(http.ListenAndServe(":5000", router))
 }
