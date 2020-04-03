@@ -238,10 +238,21 @@ func (r *userResolver) CalorieGoal(ctx context.Context, obj *model.User) (*model
 	}, nil
 }
 
-func (r *userResolver) ExerciseRecords(ctx context.Context, obj *model.User) ([]*model.ExerciseRecord, error) {
+func (r *userResolver) ExerciseRecords(ctx context.Context, obj *model.User, startTime *string, endTime *string) ([]*model.ExerciseRecord, error) {
+	MinTimestamp := "1000-00-00 00:00:00"
+	MaxTimestamp := "9999-12-31 23:59:59"
+
+	if startTime == nil {
+		startTime = &MinTimestamp
+	}
+	if endTime == nil {
+		endTime = &MaxTimestamp
+	}
+
 	// Query the database for matching exercise records
 	query := fmt.Sprintf(
-		"SELECT Calories, Label, Timestamp from ExerciseRecords WHERE UserID=%s;", obj.ID)
+		"SELECT Calories, Label, Timestamp from ExerciseRecords WHERE UserID=%s AND Timestamp BETWEEN '%s' AND '%s';",
+		obj.ID, *startTime, *endTime)
 	readRows, readErr := r.DB.Query(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
@@ -281,10 +292,21 @@ func (r *userResolver) ExerciseRecords(ctx context.Context, obj *model.User) ([]
 	return records, nil
 }
 
-func (r *userResolver) FoodRecords(ctx context.Context, obj *model.User) ([]*model.FoodRecord, error) {
-	// Query the database for matching exercise records
+func (r *userResolver) FoodRecords(ctx context.Context, obj *model.User, startTime *string, endTime *string) ([]*model.FoodRecord, error) {
+	MinTimestamp := "1000-00-00 00:00:00"
+	MaxTimestamp := "9999-12-31 23:59:59"
+
+	if startTime == nil {
+		startTime = &MinTimestamp
+	}
+	if endTime == nil {
+		endTime = &MaxTimestamp
+	}
+
+	// Query the database for matching food records
 	query := fmt.Sprintf(
-		"SELECT Calories, Label, Timestamp from FoodRecords WHERE UserID=%s;", obj.ID)
+		"SELECT Calories, Label, Timestamp from FoodRecords WHERE UserID=%s AND Timestamp BETWEEN '%s' AND '%s';",
+		obj.ID, *startTime, *endTime)
 	readRows, readErr := r.DB.Query(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {

@@ -85,8 +85,8 @@ type ComplexityRoot struct {
 		Age             func(childComplexity int) int
 		CalorieGoal     func(childComplexity int) int
 		DisplayName     func(childComplexity int) int
-		ExerciseRecords func(childComplexity int) int
-		FoodRecords     func(childComplexity int) int
+		ExerciseRecords func(childComplexity int, startTime *string, endTime *string) int
+		FoodRecords     func(childComplexity int, startTime *string, endTime *string) int
 		Height          func(childComplexity int) int
 		ID              func(childComplexity int) int
 		Sex             func(childComplexity int) int
@@ -107,8 +107,8 @@ type QueryResolver interface {
 }
 type UserResolver interface {
 	CalorieGoal(ctx context.Context, obj *model.User) (*model.CalorieGoal, error)
-	ExerciseRecords(ctx context.Context, obj *model.User) ([]*model.ExerciseRecord, error)
-	FoodRecords(ctx context.Context, obj *model.User) ([]*model.FoodRecord, error)
+	ExerciseRecords(ctx context.Context, obj *model.User, startTime *string, endTime *string) ([]*model.ExerciseRecord, error)
+	FoodRecords(ctx context.Context, obj *model.User, startTime *string, endTime *string) ([]*model.FoodRecord, error)
 }
 
 type executableSchema struct {
@@ -320,14 +320,24 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.User.ExerciseRecords(childComplexity), true
+		args, err := ec.field_User_exerciseRecords_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.ExerciseRecords(childComplexity, args["startTime"].(*string), args["endTime"].(*string)), true
 
 	case "User.foodRecords":
 		if e.complexity.User.FoodRecords == nil {
 			break
 		}
 
-		return e.complexity.User.FoodRecords(childComplexity), true
+		args, err := ec.field_User_foodRecords_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.FoodRecords(childComplexity, args["startTime"].(*string), args["endTime"].(*string)), true
 
 	case "User.height":
 		if e.complexity.User.Height == nil {
@@ -434,8 +444,8 @@ type User {
     sex: Sex
     weight: Int
     calorieGoal: CalorieGoal
-    exerciseRecords: [ExerciseRecord!]!
-    foodRecords: [FoodRecord!]!
+    exerciseRecords(startTime: String, endTime: String): [ExerciseRecord!]!
+    foodRecords(startTime: String, endTime: String): [FoodRecord!]!
 }
 
 type CalorieGoal {
@@ -611,6 +621,50 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_User_exerciseRecords_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["startTime"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["startTime"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["endTime"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["endTime"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_User_foodRecords_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["startTime"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["startTime"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["endTime"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["endTime"] = arg1
 	return args, nil
 }
 
@@ -1649,9 +1703,16 @@ func (ec *executionContext) _User_exerciseRecords(ctx context.Context, field gra
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_User_exerciseRecords_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().ExerciseRecords(rctx, obj)
+		return ec.resolvers.User().ExerciseRecords(rctx, obj, args["startTime"].(*string), args["endTime"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1683,9 +1744,16 @@ func (ec *executionContext) _User_foodRecords(ctx context.Context, field graphql
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_User_foodRecords_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().FoodRecords(rctx, obj)
+		return ec.resolvers.User().FoodRecords(rctx, obj, args["startTime"].(*string), args["endTime"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
