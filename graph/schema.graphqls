@@ -1,0 +1,57 @@
+type Counter {
+    id: ID!
+    value: Int!
+}
+
+type User {
+    id: ID!
+    displayName: String
+    age: Int
+    height: Int
+    sex: Sex
+    weight: Int
+    calorieGoal: CalorieGoal
+    exerciseRecords: [ExerciseRecord!]!
+    foodRecords: [FoodRecord!]!
+}
+
+type CalorieGoal {
+    id: ID!
+    user: User!
+    calories: Int!
+}
+
+type ExerciseRecord {
+    id: ID!
+    user: User!
+    calories: Int!
+    label: String!
+    timestamp: String!
+}
+
+type FoodRecord {
+    id: ID!
+    user: User!
+    calories: Int!
+    label: String!
+    timestamp: String!
+}
+
+enum Sex {
+    FEMALE
+    MALE
+}
+
+type Query {
+  counter(id: Int): Counter!
+  user(id: Int): User!
+}
+
+input NewUser {
+  id: ID!
+}
+
+type Mutation {
+  createUser(input: NewUser!): User!
+  incrementCounter(id: Int): Counter!
+}
