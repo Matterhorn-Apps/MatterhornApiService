@@ -9,8 +9,12 @@ import (
 )
 
 type CalorieGoal struct {
-	ID       string `json:"id"`
-	User     *User  `json:"user"`
+	User     *User `json:"user"`
+	Calories int   `json:"calories"`
+}
+
+type CalorieGoalInput struct {
+	UserID   string `json:"userId"`
 	Calories int    `json:"calories"`
 }
 
@@ -20,7 +24,6 @@ type Counter struct {
 }
 
 type ExerciseRecord struct {
-	ID        string `json:"id"`
 	User      *User  `json:"user"`
 	Calories  int    `json:"calories"`
 	Label     string `json:"label"`
@@ -28,27 +31,26 @@ type ExerciseRecord struct {
 }
 
 type FoodRecord struct {
-	ID        string `json:"id"`
 	User      *User  `json:"user"`
 	Calories  int    `json:"calories"`
 	Label     string `json:"label"`
 	Timestamp string `json:"timestamp"`
 }
 
-type NewUser struct {
-	ID string `json:"id"`
+type NewExerciseRecord struct {
+	UserID   string  `json:"userId"`
+	Label    *string `json:"label"`
+	Calories *int    `json:"calories"`
 }
 
-type User struct {
-	ID              string            `json:"id"`
-	DisplayName     *string           `json:"displayName"`
-	Age             *int              `json:"age"`
-	Height          *int              `json:"height"`
-	Sex             *Sex              `json:"sex"`
-	Weight          *int              `json:"weight"`
-	CalorieGoal     *CalorieGoal      `json:"calorieGoal"`
-	ExerciseRecords []*ExerciseRecord `json:"exerciseRecords"`
-	FoodRecords     []*FoodRecord     `json:"foodRecords"`
+type NewFoodRecord struct {
+	UserID   string  `json:"userId"`
+	Label    *string `json:"label"`
+	Calories *int    `json:"calories"`
+}
+
+type NewUser struct {
+	ID string `json:"id"`
 }
 
 type Sex string
