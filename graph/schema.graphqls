@@ -5,14 +5,13 @@ type User {
     height: Int
     sex: Sex
     weight: Int
-    calorieGoal: CalorieGoal
+    calorieGoal: Int
     exerciseRecords(startTime: String, endTime: String): [ExerciseRecord!]!
     foodRecords(startTime: String, endTime: String): [FoodRecord!]!
 }
 
 type CalorieGoal {
-    user: User!
-    calories: Int!
+  calories: Int!
 }
 
 type ExerciseRecord {

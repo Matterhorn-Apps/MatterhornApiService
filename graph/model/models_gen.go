@@ -9,8 +9,7 @@ import (
 )
 
 type CalorieGoal struct {
-	User     *User `json:"user"`
-	Calories int   `json:"calories"`
+	Calories int `json:"calories"`
 }
 
 type CalorieGoalInput struct {

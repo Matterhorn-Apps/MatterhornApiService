@@ -46,7 +46,6 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	CalorieGoal struct {
 		Calories func(childComplexity int) int
-		User     func(childComplexity int) int
 	}
 
 	ExerciseRecord struct {
@@ -97,7 +96,6 @@ type QueryResolver interface {
 	User(ctx context.Context, id *int) (*model.User, error)
 }
 type UserResolver interface {
-	CalorieGoal(ctx context.Context, obj *model.User) (*model.CalorieGoal, error)
 	ExerciseRecords(ctx context.Context, obj *model.User, startTime *string, endTime *string) ([]*model.ExerciseRecord, error)
 	FoodRecords(ctx context.Context, obj *model.User, startTime *string, endTime *string) ([]*model.FoodRecord, error)
 }
@@ -123,13 +121,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CalorieGoal.Calories(childComplexity), true
-
-	case "CalorieGoal.user":
-		if e.complexity.CalorieGoal.User == nil {
-			break
-		}
-
-		return e.complexity.CalorieGoal.User(childComplexity), true
 
 	case "ExerciseRecord.calories":
 		if e.complexity.ExerciseRecord.Calories == nil {
@@ -391,14 +382,13 @@ var sources = []*ast.Source{
     height: Int
     sex: Sex
     weight: Int
-    calorieGoal: CalorieGoal
+    calorieGoal: Int
     exerciseRecords(startTime: String, endTime: String): [ExerciseRecord!]!
     foodRecords(startTime: String, endTime: String): [FoodRecord!]!
 }
 
 type CalorieGoal {
-    user: User!
-    calories: Int!
+  calories: Int!
 }
 
 type ExerciseRecord {
@@ -621,40 +611,6 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
-
-func (ec *executionContext) _CalorieGoal_user(ctx context.Context, field graphql.CollectedField, obj *model.CalorieGoal) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "CalorieGoal",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.User, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
 
 func (ec *executionContext) _CalorieGoal_calories(ctx context.Context, field graphql.CollectedField, obj *model.CalorieGoal) (ret graphql.Marshaler) {
 	defer func() {
@@ -1436,13 +1392,13 @@ func (ec *executionContext) _User_calorieGoal(ctx context.Context, field graphql
 		Object:   "User",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().CalorieGoal(rctx, obj)
+		return obj.CalorieGoal, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1451,9 +1407,9 @@ func (ec *executionContext) _User_calorieGoal(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.CalorieGoal)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalOCalorieGoal2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐCalorieGoal(ctx, field.Selections, res)
+	return ec.marshalOInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_exerciseRecords(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -2714,11 +2670,6 @@ func (ec *executionContext) _CalorieGoal(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("CalorieGoal")
-		case "user":
-			out.Values[i] = ec._CalorieGoal_user(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "calories":
 			out.Values[i] = ec._CalorieGoal_calories(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -2936,16 +2887,7 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "weight":
 			out.Values[i] = ec._User_weight(ctx, field, obj)
 		case "calorieGoal":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._User_calorieGoal(ctx, field, obj)
-				return res
-			})
+			out.Values[i] = ec._User_calorieGoal(ctx, field, obj)
 		case "exerciseRecords":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -3671,17 +3613,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
-}
-
-func (ec *executionContext) marshalOCalorieGoal2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐCalorieGoal(ctx context.Context, sel ast.SelectionSet, v model.CalorieGoal) graphql.Marshaler {
-	return ec._CalorieGoal(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOCalorieGoal2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐCalorieGoal(ctx context.Context, sel ast.SelectionSet, v *model.CalorieGoal) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._CalorieGoal(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}) (int, error) {

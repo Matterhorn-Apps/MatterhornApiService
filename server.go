@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/99designs/gqlgen/example/starwars/generated"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/Matterhorn-Apps/MatterhornApiService/database"
 	"github.com/Matterhorn-Apps/MatterhornApiService/environment"
 	"github.com/Matterhorn-Apps/MatterhornApiService/graph"
+	"github.com/Matterhorn-Apps/MatterhornApiService/graph/generated"
 )
 
 const defaultPort = "8080"

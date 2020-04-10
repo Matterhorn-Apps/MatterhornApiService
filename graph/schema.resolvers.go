@@ -17,7 +17,7 @@ import (
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
 	// Query the database for matching exercise records
-	query := fmt.Sprintf("INSERT INTO Users (UserID) VALUES (%s);", input.ID)
+	query := fmt.Sprintf("INSERT INTO users (user_id) VALUES (%s);", input.ID)
 	_, readErr := r.DB.Exec(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
@@ -43,7 +43,7 @@ func (r *mutationResolver) CreateExerciseRecord(ctx context.Context, input *mode
 	}
 
 	// Query the database for matching exercise records
-	query := fmt.Sprintf("INSERT INTO ExerciseRecords (UserID, Label, Calories) VALUES ('%s', '%s', %d);",
+	query := fmt.Sprintf("INSERT INTO exercise_records (user_id, label, calories) VALUES ('%s', '%s', %d);",
 		input.UserID, *input.Label, *input.Calories)
 	_, readErr := r.DB.Exec(query)
 	if readErr != nil {
@@ -71,7 +71,7 @@ func (r *mutationResolver) CreateFoodRecord(ctx context.Context, input *model.Ne
 	}
 
 	// Query the database for matching Food records
-	query := fmt.Sprintf("INSERT INTO FoodRecords (UserID, Label, Calories) VALUES ('%s', '%s', %d);",
+	query := fmt.Sprintf("INSERT INTO food_records (user_id, label, calories) VALUES ('%s', '%s', %d);",
 		input.UserID, *input.Label, *input.Calories)
 	_, readErr := r.DB.Exec(query)
 	if readErr != nil {
@@ -99,9 +99,8 @@ func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.Calor
 	}
 
 	// Query the database for matching exercise records
-	query := fmt.Sprintf(
-		"INSERT INTO CalorieGoals (UserID, Calories) VALUES (%s, %d) ON DUPLICATE KEY UPDATE Calories = %[2]d;",
-		input.UserID, input.Calories)
+	query := fmt.Sprintf("UPDATE users SET calorie_goal=%d WHERE user_id=%s",
+		input.Calories, input.UserID)
 	_, readErr := r.DB.Exec(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
@@ -116,12 +115,16 @@ func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.Calor
 		return nil, readErr
 	}
 
-	return &model.CalorieGoal{}, nil
+	return &model.CalorieGoal{
+		Calories: input.Calories,
+	}, nil
 }
 
 func (r *queryResolver) User(ctx context.Context, id *int) (*model.User, error) {
 	// Query the database for the User row
-	query := fmt.Sprintf("SELECT Displayname, Age, Height, Sex, Weight from Users WHERE UserID='%d';", *id)
+	query := fmt.Sprintf(
+		`SELECT display_name, age, height, sex, weight, calorie_goal from users 
+			WHERE user_id='%d';`, *id)
 	readRows, readErr := r.DB.Query(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
@@ -140,48 +143,20 @@ func (r *queryResolver) User(ctx context.Context, id *int) (*model.User, error) 
 	// Read value from row response
 
 	var displayName string
-	var age, height, weight int64
+	var age, height, weight, calorieGoal int64
 	var sex model.Sex
 	readRows.Next()
-	readRows.Scan(&displayName, &age, &height, &sex, &weight)
+	readRows.Scan(&displayName, &age, &height, &sex, &weight, &calorieGoal)
 
 	// Construct response data object
 	return &model.User{
 		ID:          strconv.Itoa(*id),
 		DisplayName: displayName,
 		Age:         int(age),
+		CalorieGoal: int(calorieGoal),
 		Height:      int(height),
 		Sex:         sex,
 		Weight:      int(weight),
-	}, nil
-}
-
-func (r *userResolver) CalorieGoal(ctx context.Context, obj *model.User) (*model.CalorieGoal, error) {
-	// Query the database for the CalorieGoal row for the given user
-	query := fmt.Sprintf("SELECT ID, Calories from CalorieGoals WHERE UserID='%s';", obj.ID)
-	readRows, readErr := r.DB.Query(query)
-	if readErr != nil {
-		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
-			switch *errCode {
-			case 1452:
-				// User not found
-				return nil, readErr
-			}
-		}
-
-		log.Printf("Failed to query database: %v", readErr)
-		return nil, readErr
-	}
-	defer readRows.Close()
-
-	var id, calories int
-	readRows.Next()
-	readRows.Scan(&id, &calories)
-
-	// Construct response data object
-	return &model.CalorieGoal{
-		User:     obj,
-		Calories: calories,
 	}, nil
 }
 
@@ -198,7 +173,7 @@ func (r *userResolver) ExerciseRecords(ctx context.Context, obj *model.User, sta
 
 	// Query the database for matching exercise records
 	query := fmt.Sprintf(
-		"SELECT Calories, Label, Timestamp from ExerciseRecords WHERE UserID=%s AND Timestamp BETWEEN '%s' AND '%s';",
+		"SELECT Calories, Label, timestamp from exercise_records WHERE user_id=%s AND timestamp BETWEEN '%s' AND '%s';",
 		obj.ID, *startTime, *endTime)
 	readRows, readErr := r.DB.Query(query)
 	if readErr != nil {
@@ -252,7 +227,7 @@ func (r *userResolver) FoodRecords(ctx context.Context, obj *model.User, startTi
 
 	// Query the database for matching food records
 	query := fmt.Sprintf(
-		"SELECT Calories, Label, Timestamp from FoodRecords WHERE UserID=%s AND Timestamp BETWEEN '%s' AND '%s';",
+		"SELECT calories, label, timestamp from food_records WHERE user_id=%s AND timestamp BETWEEN '%s' AND '%s';",
 		obj.ID, *startTime, *endTime)
 	readRows, readErr := r.DB.Query(query)
 	if readErr != nil {
