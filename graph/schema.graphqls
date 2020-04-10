@@ -1,8 +1,3 @@
-type Counter {
-    id: ID!
-    value: Int!
-}
-
 type User {
     id: ID!
     displayName: String
@@ -40,7 +35,6 @@ enum Sex {
 }
 
 type Query {
-  counter(id: Int): Counter!
   user(id: Int): User!
 }
 
@@ -70,5 +64,4 @@ type Mutation {
   createExerciseRecord(input: NewExerciseRecord): ExerciseRecord!
   createFoodRecord(input: NewFoodRecord): FoodRecord!
   setCalorieGoal(input: CalorieGoalInput!): CalorieGoal!
-  incrementCounter(id: ID): Counter!
 }

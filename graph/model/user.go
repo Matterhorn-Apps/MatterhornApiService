@@ -7,7 +7,7 @@ type User struct {
 	Height            int      `json:"height"`
 	Sex               Sex      `json:"sex"`
 	Weight            int      `json:"weight"`
-	CalorieGoalID     string   `json:"calorieGoal"`
+	CalorieGoal       int      `json:"calorieGoal"`
 	FoodRecordIDs     []string `json:"exerciseRecords"`
 	ExerciseRecordIDs []string `json:"exerciseRecords"`
 }

@@ -18,11 +18,6 @@ type CalorieGoalInput struct {
 	Calories int    `json:"calories"`
 }
 
-type Counter struct {
-	ID    string `json:"id"`
-	Value int    `json:"value"`
-}
-
 type ExerciseRecord struct {
 	User      *User  `json:"user"`
 	Calories  int    `json:"calories"`
