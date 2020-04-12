@@ -16,14 +16,14 @@ import (
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
-	// Query the database for matching exercise records
+	// Execute query to insert new user row
 	query := fmt.Sprintf("INSERT INTO users (user_id) VALUES (%s);", input.ID)
 	_, readErr := r.DB.Exec(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
 			switch *errCode {
 			case 1062:
-				// User ID exists
+				// User ID already exists
 				return nil, readErr
 			}
 		}
@@ -98,7 +98,7 @@ func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.Calor
 		return nil, errors.New("Invalid calorie goal provided")
 	}
 
-	// Query the database for matching exercise records
+	// Update calorie goal in the user row
 	query := fmt.Sprintf("UPDATE users SET calorie_goal=%d WHERE user_id=%s",
 		input.Calories, input.UserID)
 	_, readErr := r.DB.Exec(query)
