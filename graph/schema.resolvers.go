@@ -123,7 +123,7 @@ func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.Calor
 func (r *queryResolver) User(ctx context.Context, id *int) (*model.User, error) {
 	// Query the database for the User row
 	query := fmt.Sprintf(
-		`SELECT display_name, age, height, sex, weight, calorie_goal from users 
+		`SELECT display_name, age, height_inches sex, weight_pounds, calorie_goal from users 
 			WHERE user_id='%d';`, *id)
 	readRows, readErr := r.DB.Query(query)
 	if readErr != nil {
