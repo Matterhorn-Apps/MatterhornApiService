@@ -1,12 +1,12 @@
 CREATE TABLE users (
     PRIMARY KEY (user_id),
     user_id         VARCHAR(255)            NOT NULL,
-    age             INT UNSIGNED            NOT NULL,
-    calorie_goal    INT UNSIGNED            NOT NULL,
-    display_name    VARCHAR(255)            NOT NULL,
-    height_inches   INT UNSIGNED            NOT NULL,
-    sex             ENUM('Female', 'Male')  NOT NULL,
-    weight_pounds   INT UNSIGNED            NOT NULL
+    age             INT UNSIGNED,
+    calorie_goal    INT UNSIGNED,
+    display_name    VARCHAR(255),
+    height_inches   INT UNSIGNED,
+    sex             ENUM('Female', 'Male'),
+    weight_pounds   INT UNSIGNED
 );
 
 CREATE TABLE exercise_records (

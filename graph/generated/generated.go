@@ -70,7 +70,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		User func(childComplexity int, id *int) int
+		User func(childComplexity int, id string) int
 	}
 
 	User struct {
@@ -93,7 +93,7 @@ type MutationResolver interface {
 	SetCalorieGoal(ctx context.Context, input model.CalorieGoalInput) (*model.CalorieGoal, error)
 }
 type QueryResolver interface {
-	User(ctx context.Context, id *int) (*model.User, error)
+	User(ctx context.Context, id string) (*model.User, error)
 }
 type UserResolver interface {
 	ExerciseRecords(ctx context.Context, obj *model.User, startTime *string, endTime *string) ([]*model.ExerciseRecord, error)
@@ -236,7 +236,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.User(childComplexity, args["id"].(*int)), true
+		return e.complexity.Query.User(childComplexity, args["id"].(string)), true
 
 	case "User.age":
 		if e.complexity.User.Age == nil {
@@ -411,7 +411,7 @@ enum Sex {
 }
 
 type Query {
-  user(id: Int): User!
+  user(id: ID!): User!
 }
 
 input CalorieGoalInput {
@@ -521,9 +521,9 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *int
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1106,7 +1106,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().User(rctx, args["id"].(*int))
+		return ec.resolvers.Query().User(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

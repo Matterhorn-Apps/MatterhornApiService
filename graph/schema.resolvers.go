@@ -5,10 +5,10 @@ package graph
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/Matterhorn-Apps/MatterhornApiService/database"
 	"github.com/Matterhorn-Apps/MatterhornApiService/graph/generated"
@@ -99,7 +99,7 @@ func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.Calor
 	}
 
 	// Update calorie goal in the user row
-	query := fmt.Sprintf("UPDATE users SET calorie_goal=%d WHERE user_id=%s",
+	query := fmt.Sprintf("UPDATE users SET calorie_goal=%d WHERE user_id='%s'",
 		input.Calories, input.UserID)
 	_, readErr := r.DB.Exec(query)
 	if readErr != nil {
@@ -120,11 +120,11 @@ func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.Calor
 	}, nil
 }
 
-func (r *queryResolver) User(ctx context.Context, id *int) (*model.User, error) {
+func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
 	// Query the database for the User row
 	query := fmt.Sprintf(
-		`SELECT display_name, age, height_inches sex, weight_pounds, calorie_goal from users 
-			WHERE user_id='%d';`, *id)
+		`SELECT display_name, age, height_inches, sex, weight_pounds, calorie_goal from users 
+			WHERE user_id='%s';`, id)
 	readRows, readErr := r.DB.Query(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
@@ -142,21 +142,20 @@ func (r *queryResolver) User(ctx context.Context, id *int) (*model.User, error) 
 
 	// Read value from row response
 
-	var displayName string
-	var age, height, weight, calorieGoal int64
-	var sex model.Sex
+	var displayName, sex sql.NullString
+	var age, height, weight, calorieGoal sql.NullInt64
 	readRows.Next()
 	readRows.Scan(&displayName, &age, &height, &sex, &weight, &calorieGoal)
 
 	// Construct response data object
 	return &model.User{
-		ID:          strconv.Itoa(*id),
-		DisplayName: displayName,
-		Age:         int(age),
-		CalorieGoal: int(calorieGoal),
-		Height:      int(height),
-		Sex:         sex,
-		Weight:      int(weight),
+		ID:          id,
+		DisplayName: displayName.String,
+		Age:         int(age.Int64),
+		CalorieGoal: int(calorieGoal.Int64),
+		Height:      int(height.Int64),
+		Sex:         model.Sex(sex.String),
+		Weight:      int(weight.Int64),
 	}, nil
 }
 
@@ -173,7 +172,7 @@ func (r *userResolver) ExerciseRecords(ctx context.Context, obj *model.User, sta
 
 	// Query the database for matching exercise records
 	query := fmt.Sprintf(
-		"SELECT Calories, Label, timestamp from exercise_records WHERE user_id=%s AND timestamp BETWEEN '%s' AND '%s';",
+		"SELECT Calories, Label, timestamp from exercise_records WHERE user_id='%s' AND timestamp BETWEEN '%s' AND '%s';",
 		obj.ID, *startTime, *endTime)
 	readRows, readErr := r.DB.Query(query)
 	if readErr != nil {
@@ -227,7 +226,7 @@ func (r *userResolver) FoodRecords(ctx context.Context, obj *model.User, startTi
 
 	// Query the database for matching food records
 	query := fmt.Sprintf(
-		"SELECT calories, label, timestamp from food_records WHERE user_id=%s AND timestamp BETWEEN '%s' AND '%s';",
+		"SELECT calories, label, timestamp from food_records WHERE user_id='%s' AND timestamp BETWEEN '%s' AND '%s';",
 		obj.ID, *startTime, *endTime)
 	readRows, readErr := r.DB.Query(query)
 	if readErr != nil {

@@ -34,7 +34,7 @@ enum Sex {
 }
 
 type Query {
-  user(id: Int): User!
+  user(id: ID!): User!
 }
 
 input CalorieGoalInput {
