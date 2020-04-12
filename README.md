@@ -3,15 +3,15 @@ Web API service for Matterhorn implemented with Go.
 
 ## Requirements
 To build and run MatterhornApiService locally you will need:
-* Go 1.13 or higher
-* golang-migrate CLI tool (installed using Homebrew on macOS or Scoop on Windows)
-* Docker Desktop (used to host a local instance of mysql-server and run openapi-generator)
+* Go 1.14 or higher
+* golang-migrate CLI tool (used to execute database migrations - see installation instructions below)
+* Docker Desktop (used to host a local instance of mysql-server)
 
 ## Setup
 This section documents how to set up your environment to run MatterhornApiService.
 
 ### Go Runtime
-MatterhornApiService is built to run on Go v1.13.
+MatterhornApiService is built to run on Go v1.14.
 
 ### Configuring Environment Variables
 `MATTERHORN_ENV` - Defines the environment configuration to be used. Expected values include `dev` and `prod`. This determines the database endpoint and schema name is used.
@@ -31,10 +31,12 @@ Use the Go CLI to execute unit tests.
 `go test`
 
 ## Adding new APIs
-MatterhornApiService follows a spec-first approach to defining API endpoints. To add, remove, or modify an API, first add a new version of the OpenAPI spec in [MatterhornApiSpec](https://github.com/Matterhorn-Apps/MatterhornApiSpec) (this repository is included by MatterhornApiService as a submodule). Next, update the VSCode task named "Generate Server Stubs" to use your intended version of the spec and execute it. This will regenerate server stubs based on the updated OpenAPI spec without overwriting any existing implementation (as configured in `.openapi-generator-ignore`). You will need to modify `main.go` to create your *Service and *Controller structs and initialize them with any injected dependencies.
+MatterhornApiService follows a spec-first approach to defining API endpoints using GraphQL. 
+
+To add, remove, or modify an API, first add any new types to the schema document `graph/schema.graphqls`. Next, run `go generate ./...` to generate new and updated Go types and resolver implementation stubs. Then implement any new resolvers in `graph/schema.resolvers.go`. If you need to define a modified Go type to use in place of the one that was auto-generated, you can define it in `graph/model`, as has been done for `graph/model/user.go`. One useful reason to do this is to replace a reference to a "child" entity with an ID; this will trigger generation of a dependent resolver that will only execute to retrieve the corresponding field if it is requested.
 
 ## CI/CD
-MatterhornApiService is configured to deploy to AWS Elastic Beanstalk. `Buildfile`, and `Procfile` are provided to describe how to run and build the application to Elastic Beanstalk. Before running the application, Elastic Beanstalk will execute the `build.sh` script; this is done instead of deploying a pre-compiled binary because it needs to be compiled for the OS and architecture of the target host.
+MatterhornApiService is configured to deploy to AWS Elastic Beanstalk.
 
 GitHub Actions for this repository are configured to automatically deploy to Matterhorn's production Elastic Beanstalk environment in response to commits being pushed to `master`.
 

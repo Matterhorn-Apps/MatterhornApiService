@@ -32,7 +32,7 @@ jobs:
 
     # Pack compiled binary into zip file
     - name: Pack
-      run: zip source.zip application .env* migrations/* api/* swaggerui/* .ebextensions/*
+      run: zip source.zip application .env* migrations/* .ebextensions/*
 
     # Upload build artifact for consumption by subsequent deploy jobs
     - name: Upload build artifact

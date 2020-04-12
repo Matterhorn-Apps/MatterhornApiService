@@ -1,0 +1,66 @@
+type User {
+    id: ID!
+    displayName: String
+    age: Int
+    height: Int
+    sex: Sex
+    weight: Int
+    calorieGoal: Int
+    exerciseRecords(startTime: String, endTime: String): [ExerciseRecord!]!
+    foodRecords(startTime: String, endTime: String): [FoodRecord!]!
+}
+
+type CalorieGoal {
+  calories: Int!
+}
+
+type ExerciseRecord {
+    user: User!
+    calories: Int!
+    label: String!
+    timestamp: String!
+}
+
+type FoodRecord {
+    user: User!
+    calories: Int!
+    label: String!
+    timestamp: String!
+}
+
+enum Sex {
+    FEMALE
+    MALE
+}
+
+type Query {
+  user(id: ID!): User!
+}
+
+input CalorieGoalInput {
+  userId: ID!
+  calories: Int!
+}
+
+input NewExerciseRecord {
+  userId: ID!
+  label: String
+  calories: Int
+}
+
+input NewFoodRecord {
+  userId: ID!
+  label: String
+  calories: Int
+}
+
+input NewUser {
+  id: ID!
+}
+
+type Mutation {
+  createUser(input: NewUser!): User!
+  createExerciseRecord(input: NewExerciseRecord): ExerciseRecord!
+  createFoodRecord(input: NewFoodRecord): FoodRecord!
+  setCalorieGoal(input: CalorieGoalInput!): CalorieGoal!
+}
