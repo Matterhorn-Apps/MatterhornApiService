@@ -44,6 +44,15 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AuthUser struct {
+		ID       func(childComplexity int) int
+		Name     func(childComplexity int) int
+		Nickname func(childComplexity int) int
+		Picture  func(childComplexity int) int
+		Scopes   func(childComplexity int) int
+		Token    func(childComplexity int) int
+	}
+
 	CalorieGoal struct {
 		Calories func(childComplexity int) int
 	}
@@ -70,6 +79,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Me   func(childComplexity int) int
 		User func(childComplexity int, id string) int
 	}
 
@@ -93,6 +103,7 @@ type MutationResolver interface {
 	SetCalorieGoal(ctx context.Context, input model.CalorieGoalInput) (*model.CalorieGoal, error)
 }
 type QueryResolver interface {
+	Me(ctx context.Context) (*model.AuthUser, error)
 	User(ctx context.Context, id string) (*model.User, error)
 }
 type UserResolver interface {
@@ -114,6 +125,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "AuthUser.id":
+		if e.complexity.AuthUser.ID == nil {
+			break
+		}
+
+		return e.complexity.AuthUser.ID(childComplexity), true
+
+	case "AuthUser.name":
+		if e.complexity.AuthUser.Name == nil {
+			break
+		}
+
+		return e.complexity.AuthUser.Name(childComplexity), true
+
+	case "AuthUser.nickname":
+		if e.complexity.AuthUser.Nickname == nil {
+			break
+		}
+
+		return e.complexity.AuthUser.Nickname(childComplexity), true
+
+	case "AuthUser.picture":
+		if e.complexity.AuthUser.Picture == nil {
+			break
+		}
+
+		return e.complexity.AuthUser.Picture(childComplexity), true
+
+	case "AuthUser.scopes":
+		if e.complexity.AuthUser.Scopes == nil {
+			break
+		}
+
+		return e.complexity.AuthUser.Scopes(childComplexity), true
+
+	case "AuthUser.token":
+		if e.complexity.AuthUser.Token == nil {
+			break
+		}
+
+		return e.complexity.AuthUser.Token(childComplexity), true
 
 	case "CalorieGoal.calories":
 		if e.complexity.CalorieGoal.Calories == nil {
@@ -225,6 +278,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.SetCalorieGoal(childComplexity, args["input"].(model.CalorieGoalInput)), true
+
+	case "Query.me":
+		if e.complexity.Query.Me == nil {
+			break
+		}
+
+		return e.complexity.Query.Me(childComplexity), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -375,7 +435,16 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	&ast.Source{Name: "graph/schema.graphqls", Input: `type User {
+	&ast.Source{Name: "graph/schema.graphqls", Input: `type AuthUser {
+  id: ID!
+  token: String!
+  scopes: [String!]!
+  name: String
+  nickname: String
+  picture: String
+}
+
+type User {
     id: ID!
     displayName: String
     age: Int
@@ -411,6 +480,7 @@ enum Sex {
 }
 
 type Query {
+  me: AuthUser!
   user(id: ID!): User!
 }
 
@@ -611,6 +681,201 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _AuthUser_id(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AuthUser",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AuthUser_token(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AuthUser",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AuthUser_scopes(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AuthUser",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scopes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AuthUser_name(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AuthUser",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AuthUser_nickname(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AuthUser",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Nickname, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AuthUser_picture(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AuthUser",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Picture, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _CalorieGoal_calories(ctx context.Context, field graphql.CollectedField, obj *model.CalorieGoal) (ret graphql.Marshaler) {
 	defer func() {
@@ -1080,6 +1345,40 @@ func (ec *executionContext) _Mutation_setCalorieGoal(ctx context.Context, field 
 	res := resTmp.(*model.CalorieGoal)
 	fc.Result = res
 	return ec.marshalNCalorieGoal2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐCalorieGoal(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Me(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AuthUser)
+	fc.Result = res
+	return ec.marshalNAuthUser2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐAuthUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2659,6 +2958,49 @@ func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj inter
 
 // region    **************************** object.gotpl ****************************
 
+var authUserImplementors = []string{"AuthUser"}
+
+func (ec *executionContext) _AuthUser(ctx context.Context, sel ast.SelectionSet, obj *model.AuthUser) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, authUserImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AuthUser")
+		case "id":
+			out.Values[i] = ec._AuthUser_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "token":
+			out.Values[i] = ec._AuthUser_token(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "scopes":
+			out.Values[i] = ec._AuthUser_scopes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._AuthUser_name(ctx, field, obj)
+		case "nickname":
+			out.Values[i] = ec._AuthUser_nickname(ctx, field, obj)
+		case "picture":
+			out.Values[i] = ec._AuthUser_picture(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var calorieGoalImplementors = []string{"CalorieGoal"}
 
 func (ec *executionContext) _CalorieGoal(ctx context.Context, sel ast.SelectionSet, obj *model.CalorieGoal) graphql.Marshaler {
@@ -2831,6 +3173,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "me":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_me(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "user":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -3172,6 +3528,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAuthUser2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐAuthUser(ctx context.Context, sel ast.SelectionSet, v model.AuthUser) graphql.Marshaler {
+	return ec._AuthUser(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAuthUser2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐAuthUser(ctx context.Context, sel ast.SelectionSet, v *model.AuthUser) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._AuthUser(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	return graphql.UnmarshalBoolean(v)
 }
@@ -3350,6 +3720,35 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNUser2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
