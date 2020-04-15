@@ -13,7 +13,7 @@ func LoadEnv(relPath string) {
 	env := os.Getenv("MATTERHORN_ENV")
 	if "" == env {
 		// Default to "local"
-		env = "dev"
+		env = "local"
 	}
 
 	// Environment-specific configuration

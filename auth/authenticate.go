@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
@@ -61,17 +64,41 @@ func getPemCert(token *jwt.Token) (string, error) {
 
 // BuildAuthenticationMiddleware creates a middleware function that can be used to protect any HTTP endpoint
 func BuildAuthenticationMiddleware() *jwtmiddleware.JWTMiddleware {
+	//
+	// THIS CODE BYPASSES AUTHENTICATION - DO NOT ENABLE IN PRODUCTION ENVIRONMENT
+	//
+	// Require valid JWT token to access endpoint only in production environment.
+	// This enables us to use GraphQL playground and use fake test accounts without
+	// authenticating with Auth0 in local and dev environments.
+	// TODO: Consider alternatives that offer similar developer convenience without bypassing security.
+	credentialsOptional := os.Getenv("MATTERHORN_ENV") != "prod"
+
 	return jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: validationKeyGetter,
 		SigningMethod:       jwt.SigningMethodRS256,
 		// We don't currently require authentication for all requests
 		// Authorization requirements must be explicitly enforced by the resolvers where necessary
-		CredentialsOptional: true,
+		CredentialsOptional: credentialsOptional,
 	})
 }
 
-// GetTokenSubjectFromContext retrieves the User ID from a given JWT access token
-func GetTokenSubjectFromContext(ctx context.Context) (*string, error) {
+// GetUserIdFromContext retrieves the User ID from a given JWT access token
+func GetUserIDFromContext(ctx context.Context) (*string, error) {
+	//
+	// THIS CODE BYPASSES AUTHENTICATION - DO NOT ENABLE IN PRODUCTION ENVIRONMENT
+	//
+	// Optionally override User ID in local environment only
+	if os.Getenv("MATTERHORN_ENV") != "prod" {
+		if testUser, exists := os.LookupEnv("TEST_USER_ID"); exists {
+			if !strings.HasPrefix(testUser, "test|") {
+				return nil, errors.New("test user id must begin with 'test|'")
+			}
+
+			log.Printf("authenticating as test user: %s", testUser)
+			return &testUser, nil
+		}
+	}
+
 	userToken, ok := ctx.Value("user").(*jwt.Token)
 	if userToken == nil || !ok {
 		return nil, errors.New("request does not contain user token")
