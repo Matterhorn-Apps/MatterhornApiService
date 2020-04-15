@@ -14,26 +14,22 @@ import (
 const auth0ApiIdentifier = "matterhorn-api"
 const auth0Domain = "https://matterhorn-prototype.auth0.com/"
 
-type Response struct {
-	Message string `json:"message"`
-}
-
-type Jwks struct {
-	Keys []JSONWebKeys `json:"keys"`
-}
-
-type JSONWebKeys struct {
-	Kty string   `json:"kty"`
-	Kid string   `json:"kid"`
-	Use string   `json:"use"`
-	N   string   `json:"n"`
-	E   string   `json:"e"`
-	X5c []string `json:"x5c"`
-}
-
 // getPemCerts gets the remote JWKS for the Auth0 account and returns the certificate with the public key in
 // PEM format
 func getPemCert(token *jwt.Token) (string, error) {
+	type JSONWebKeys struct {
+		Kty string   `json:"kty"`
+		Kid string   `json:"kid"`
+		Use string   `json:"use"`
+		N   string   `json:"n"`
+		E   string   `json:"e"`
+		X5c []string `json:"x5c"`
+	}
+
+	type Jwks struct {
+		Keys []JSONWebKeys `json:"keys"`
+	}
+
 	cert := ""
 	resp, err := http.Get(fmt.Sprintf("%s.well-known/jwks.json", auth0Domain))
 
@@ -49,14 +45,14 @@ func getPemCert(token *jwt.Token) (string, error) {
 		return cert, err
 	}
 
-	for k, _ := range jwks.Keys {
+	for k := range jwks.Keys {
 		if token.Header["kid"] == jwks.Keys[k].Kid {
 			cert = "-----BEGIN CERTIFICATE-----\n" + jwks.Keys[k].X5c[0] + "\n-----END CERTIFICATE-----"
 		}
 	}
 
 	if cert == "" {
-		err := errors.New("Unable to find appropriate key.")
+		err := errors.New("unable to find appropriate key")
 		return cert, err
 	}
 
@@ -68,14 +64,30 @@ func BuildAuthenticationMiddleware() *jwtmiddleware.JWTMiddleware {
 	return jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: validationKeyGetter,
 		SigningMethod:       jwt.SigningMethodRS256,
+		// We don't currently require authentication for all requests
+		// Authorization requirements must be explicitly enforced by the resolvers where necessary
 		CredentialsOptional: true,
 	})
 }
 
 // GetTokenSubjectFromContext retrieves the User ID from a given JWT access token
-func GetTokenSubjectFromContext(ctx context.Context) string {
-	claims := ctx.Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
-	return claims["sub"].(string)
+func GetTokenSubjectFromContext(ctx context.Context) (*string, error) {
+	userToken, ok := ctx.Value("user").(*jwt.Token)
+	if userToken == nil || !ok {
+		return nil, errors.New("request does not contain user token")
+	}
+
+	claims, ok := userToken.Claims.(jwt.MapClaims)
+	if claims == nil || !ok {
+		return nil, errors.New("unable to parse claims on user token")
+	}
+
+	sub, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("unable to read 'sub' value from user token")
+	}
+
+	return &sub, nil
 }
 
 func validationKeyGetter(token *jwt.Token) (interface{}, error) {

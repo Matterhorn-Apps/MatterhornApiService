@@ -122,9 +122,14 @@ func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.Calor
 }
 
 func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
-	userID := auth.GetTokenSubjectFromContext(ctx)
+	// Get the user ID from context
+	// If not found, request is not authenticated and should fail
+	tokenSub, err := auth.GetTokenSubjectFromContext(ctx)
+	if tokenSub == nil || err != nil {
+		return nil, errors.New("request failed: caller not authenticated")
+	}
 
-	return r.User(ctx, userID)
+	return r.User(ctx, *tokenSub)
 }
 
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
