@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -62,12 +63,19 @@ func getPemCert(token *jwt.Token) (string, error) {
 	return cert, nil
 }
 
-// BuildAuthenticationMiddleware creates a Negroni middleware function that can be used to protect any endpoint
+// BuildAuthenticationMiddleware creates a middleware function that can be used to protect any HTTP endpoint
 func BuildAuthenticationMiddleware() *jwtmiddleware.JWTMiddleware {
 	return jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: validationKeyGetter,
 		SigningMethod:       jwt.SigningMethodRS256,
+		CredentialsOptional: true,
 	})
+}
+
+// GetTokenSubjectFromContext retrieves the User ID from a given JWT access token
+func GetTokenSubjectFromContext(ctx context.Context) string {
+	claims := ctx.Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
+	return claims["sub"].(string)
 }
 
 func validationKeyGetter(token *jwt.Token) (interface{}, error) {

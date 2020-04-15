@@ -1,12 +1,3 @@
-type AuthUser {
-  id: ID!
-  token: String!
-  scopes: [String!]!
-  name: String
-  nickname: String
-  picture: String
-}
-
 type User {
     id: ID!
     displayName: String
@@ -43,7 +34,7 @@ enum Sex {
 }
 
 type Query {
-  me: AuthUser!
+  me: User!
   user(id: ID!): User!
 }
 

@@ -8,15 +8,6 @@ import (
 	"strconv"
 )
 
-type AuthUser struct {
-	ID       string   `json:"id"`
-	Token    string   `json:"token"`
-	Scopes   []string `json:"scopes"`
-	Name     *string  `json:"name"`
-	Nickname *string  `json:"nickname"`
-	Picture  *string  `json:"picture"`
-}
-
 type CalorieGoal struct {
 	Calories int `json:"calories"`
 }

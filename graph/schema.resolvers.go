@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Matterhorn-Apps/MatterhornApiService/auth"
 	"github.com/Matterhorn-Apps/MatterhornApiService/database"
 	"github.com/Matterhorn-Apps/MatterhornApiService/graph/generated"
 	"github.com/Matterhorn-Apps/MatterhornApiService/graph/model"
@@ -120,28 +121,10 @@ func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.Calor
 	}, nil
 }
 
-func (r *queryResolver) Me(ctx context.Context) (*model.AuthUser, error) {
-	// TODO: Get the token for the caller
+func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
+	userID := auth.GetTokenSubjectFromContext(ctx)
 
-	// TODO: Get the ID for the caller
-
-	// TODO: Get and return profile data for the user
-
-	// TODO: Return user-specific profile data
-
-	name := "NAME"
-	nickname := "NICKNAME"
-	picture := "PICTURE"
-	scopes := []string{"SCOPE1"}
-	token := "TOKEN"
-	return &model.AuthUser{
-		ID:       "FAKE ID",
-		Name:     &name,
-		Nickname: &nickname,
-		Picture:  &picture,
-		Scopes:   scopes,
-		Token:    token,
-	}, nil
+	return r.User(ctx, userID)
 }
 
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {

@@ -12,7 +12,6 @@ import (
 	"github.com/Matterhorn-Apps/MatterhornApiService/environment"
 	"github.com/Matterhorn-Apps/MatterhornApiService/graph"
 	"github.com/Matterhorn-Apps/MatterhornApiService/graph/generated"
-	"github.com/go-chi/chi"
 )
 
 const defaultPort = "8080"
@@ -36,19 +35,17 @@ func main() {
 	// Migrate database if necessary
 	database.Migrate(db)
 
-	router := chi.NewRouter()
-
-	router.Use(auth.Middleware())
-
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
 		Resolvers: &graph.Resolver{
 			DB: db,
 		},
 	}))
 
+	jwtMiddleware := auth.BuildAuthenticationMiddleware()
+
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	http.Handle("/query", jwtMiddleware.Handler(srv))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
