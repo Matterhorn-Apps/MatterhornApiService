@@ -120,6 +120,60 @@ func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.Calor
 	}, nil
 }
 
+func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (*bool, error) {
+	// Delete the row in the users table with an ID matching the one passed in
+	query := fmt.Sprintf(`DELETE FROM users WHERE user_id='%s';`, id)
+	_, readErr := r.DB.Exec(query)
+	if readErr != nil {
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1452:
+				// User not found
+				return nil, readErr
+			}
+		}
+
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+
+	// Delete the row in the exercise_records table with an ID matching the one passed in
+	query = fmt.Sprintf(`DELETE FROM exercise_records WHERE user_id='%s';`, id)
+	_, readErr = r.DB.Exec(query)
+	if readErr != nil {
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1452:
+				// User not found
+				return nil, readErr
+			}
+		}
+
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+
+	// Delete the row in the food_records table with an ID matching the one passed in
+	query = fmt.Sprintf(`DELETE FROM food_records WHERE user_id='%s';`, id)
+	_, readErr = r.DB.Exec(query)
+	if readErr != nil {
+		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
+			switch *errCode {
+			case 1452:
+				// User not found
+				return nil, readErr
+			}
+		}
+
+		log.Printf("Failed to query database: %v", readErr)
+		return nil, readErr
+	}
+
+	// Allocating an address so we can return a pointer
+	temp := true
+	return &temp, nil
+}
+
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
 	// Query the database for the User row
 	query := fmt.Sprintf(

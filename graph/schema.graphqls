@@ -63,4 +63,5 @@ type Mutation {
   createExerciseRecord(input: NewExerciseRecord): ExerciseRecord!
   createFoodRecord(input: NewFoodRecord): FoodRecord!
   setCalorieGoal(input: CalorieGoalInput!): CalorieGoal!
+  deleteUser(id: ID!): Boolean
 }
