@@ -12,8 +12,8 @@ import (
 func LoadEnv(relPath string) {
 	env := os.Getenv("MATTERHORN_ENV")
 	if "" == env {
-		// Default to "local"
-		env = "local"
+		// Default to "prod" if environment variable is unset
+		env = "prod"
 	}
 
 	// Environment-specific configuration

@@ -109,6 +109,7 @@ func GetUserIDFromContext(ctx context.Context) (*string, error) {
 		return nil, errors.New("unable to parse claims on user token")
 	}
 
+	// 'sub' contains unique user ID assigned by Auth0
 	sub, ok := claims["sub"].(string)
 	if !ok {
 		return nil, errors.New("unable to read 'sub' value from user token")
@@ -119,14 +120,16 @@ func GetUserIDFromContext(ctx context.Context) (*string, error) {
 
 func validationKeyGetter(token *jwt.Token) (interface{}, error) {
 	// Verify 'aud' claim
+	// Audience is expected to match value for MatterhornAPIService
 	aud := auth0ApiIdentifier
-	checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
+	checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, true)
 	if !checkAud {
 		return token, errors.New("invalid audience")
 	}
 	// Verify 'iss' claim
+	// Issuer is expected to match value for Matterhorn Auth0 tenant
 	iss := auth0Domain
-	checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
+	checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, true)
 	if !checkIss {
 		return token, errors.New("invalid issuer")
 	}
