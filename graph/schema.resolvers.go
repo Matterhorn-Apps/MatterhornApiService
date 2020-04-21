@@ -134,7 +134,8 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (*bool, er
 		}
 
 		log.Printf("Failed to query database: %v", readErr)
-		return nil, readErr
+		temp := false
+		return &temp, readErr
 	}
 
 	// Allocating an address so we can return a pointer
