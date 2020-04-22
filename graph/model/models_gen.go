@@ -13,8 +13,7 @@ type CalorieGoal struct {
 }
 
 type CalorieGoalInput struct {
-	UserID   string `json:"userId"`
-	Calories int    `json:"calories"`
+	Calories int `json:"calories"`
 }
 
 type ExerciseRecord struct {
@@ -32,13 +31,11 @@ type FoodRecord struct {
 }
 
 type NewExerciseRecord struct {
-	UserID   string  `json:"userId"`
 	Label    *string `json:"label"`
 	Calories *int    `json:"calories"`
 }
 
 type NewFoodRecord struct {
-	UserID   string  `json:"userId"`
 	Label    *string `json:"label"`
 	Calories *int    `json:"calories"`
 }

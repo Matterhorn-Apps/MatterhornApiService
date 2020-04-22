@@ -63,14 +63,16 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateExerciseRecord func(childComplexity int, input *model.NewExerciseRecord) int
-		CreateFoodRecord     func(childComplexity int, input *model.NewFoodRecord) int
+		CreateExerciseRecord func(childComplexity int, input model.NewExerciseRecord) int
+		CreateFoodRecord     func(childComplexity int, input model.NewFoodRecord) int
+		CreateMe             func(childComplexity int) int
 		CreateUser           func(childComplexity int, input model.NewUser) int
 		DeleteUser           func(childComplexity int, id string) int
 		SetCalorieGoal       func(childComplexity int, input model.CalorieGoalInput) int
 	}
 
 	Query struct {
+		Me   func(childComplexity int) int
 		User func(childComplexity int, id string) int
 	}
 
@@ -88,13 +90,15 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	CreateMe(ctx context.Context) (*model.User, error)
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
-	CreateExerciseRecord(ctx context.Context, input *model.NewExerciseRecord) (*model.ExerciseRecord, error)
-	CreateFoodRecord(ctx context.Context, input *model.NewFoodRecord) (*model.FoodRecord, error)
+	CreateExerciseRecord(ctx context.Context, input model.NewExerciseRecord) (*model.ExerciseRecord, error)
+	CreateFoodRecord(ctx context.Context, input model.NewFoodRecord) (*model.FoodRecord, error)
 	SetCalorieGoal(ctx context.Context, input model.CalorieGoalInput) (*model.CalorieGoal, error)
 	DeleteUser(ctx context.Context, id string) (*bool, error)
 }
 type QueryResolver interface {
+	Me(ctx context.Context) (*model.User, error)
 	User(ctx context.Context, id string) (*model.User, error)
 }
 type UserResolver interface {
@@ -190,7 +194,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateExerciseRecord(childComplexity, args["input"].(*model.NewExerciseRecord)), true
+		return e.complexity.Mutation.CreateExerciseRecord(childComplexity, args["input"].(model.NewExerciseRecord)), true
 
 	case "Mutation.createFoodRecord":
 		if e.complexity.Mutation.CreateFoodRecord == nil {
@@ -202,7 +206,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateFoodRecord(childComplexity, args["input"].(*model.NewFoodRecord)), true
+		return e.complexity.Mutation.CreateFoodRecord(childComplexity, args["input"].(model.NewFoodRecord)), true
+
+	case "Mutation.createMe":
+		if e.complexity.Mutation.CreateMe == nil {
+			break
+		}
+
+		return e.complexity.Mutation.CreateMe(childComplexity), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -239,6 +250,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.SetCalorieGoal(childComplexity, args["input"].(model.CalorieGoalInput)), true
+
+	case "Query.me":
+		if e.complexity.Query.Me == nil {
+			break
+		}
+
+		return e.complexity.Query.Me(childComplexity), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -425,22 +443,20 @@ enum Sex {
 }
 
 type Query {
-  user(id: ID!): User!
+  me: User
+  user(id: ID!): User
 }
 
 input CalorieGoalInput {
-  userId: ID!
   calories: Int!
 }
 
 input NewExerciseRecord {
-  userId: ID!
   label: String
   calories: Int
 }
 
 input NewFoodRecord {
-  userId: ID!
   label: String
   calories: Int
 }
@@ -450,9 +466,10 @@ input NewUser {
 }
 
 type Mutation {
+  createMe: User!
   createUser(input: NewUser!): User!
-  createExerciseRecord(input: NewExerciseRecord): ExerciseRecord!
-  createFoodRecord(input: NewFoodRecord): FoodRecord!
+  createExerciseRecord(input: NewExerciseRecord!): ExerciseRecord!
+  createFoodRecord(input: NewFoodRecord!): FoodRecord!
   setCalorieGoal(input: CalorieGoalInput!): CalorieGoal!
   deleteUser(id: ID!): Boolean
 }`, BuiltIn: false},
@@ -466,9 +483,9 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_createExerciseRecord_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.NewExerciseRecord
+	var arg0 model.NewExerciseRecord
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalONewExerciseRecord2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewExerciseRecord(ctx, tmp)
+		arg0, err = ec.unmarshalNNewExerciseRecord2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewExerciseRecord(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -480,9 +497,9 @@ func (ec *executionContext) field_Mutation_createExerciseRecord_args(ctx context
 func (ec *executionContext) field_Mutation_createFoodRecord_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.NewFoodRecord
+	var arg0 model.NewFoodRecord
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalONewFoodRecord2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewFoodRecord(ctx, tmp)
+		arg0, err = ec.unmarshalNNewFoodRecord2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewFoodRecord(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -947,6 +964,40 @@ func (ec *executionContext) _FoodRecord_timestamp(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_createMe(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateMe(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1012,7 +1063,7 @@ func (ec *executionContext) _Mutation_createExerciseRecord(ctx context.Context, 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateExerciseRecord(rctx, args["input"].(*model.NewExerciseRecord))
+		return ec.resolvers.Mutation().CreateExerciseRecord(rctx, args["input"].(model.NewExerciseRecord))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1053,7 +1104,7 @@ func (ec *executionContext) _Mutation_createFoodRecord(ctx context.Context, fiel
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateFoodRecord(rctx, args["input"].(*model.NewFoodRecord))
+		return ec.resolvers.Mutation().CreateFoodRecord(rctx, args["input"].(model.NewFoodRecord))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1149,6 +1200,37 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Me(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1180,14 +1262,11 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2622,12 +2701,6 @@ func (ec *executionContext) unmarshalInputCalorieGoalInput(ctx context.Context, 
 
 	for k, v := range asMap {
 		switch k {
-		case "userId":
-			var err error
-			it.UserID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "calories":
 			var err error
 			it.Calories, err = ec.unmarshalNInt2int(ctx, v)
@@ -2646,12 +2719,6 @@ func (ec *executionContext) unmarshalInputNewExerciseRecord(ctx context.Context,
 
 	for k, v := range asMap {
 		switch k {
-		case "userId":
-			var err error
-			it.UserID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "label":
 			var err error
 			it.Label, err = ec.unmarshalOString2ᚖstring(ctx, v)
@@ -2676,12 +2743,6 @@ func (ec *executionContext) unmarshalInputNewFoodRecord(ctx context.Context, obj
 
 	for k, v := range asMap {
 		switch k {
-		case "userId":
-			var err error
-			it.UserID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "label":
 			var err error
 			it.Label, err = ec.unmarshalOString2ᚖstring(ctx, v)
@@ -2852,6 +2913,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "createMe":
+			out.Values[i] = ec._Mutation_createMe(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -2900,6 +2966,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "me":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_me(ctx, field)
+				return res
+			})
 		case "user":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -2909,9 +2986,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_user(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			})
 		case "__type":
@@ -3403,6 +3477,14 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) unmarshalNNewExerciseRecord2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewExerciseRecord(ctx context.Context, v interface{}) (model.NewExerciseRecord, error) {
+	return ec.unmarshalInputNewExerciseRecord(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNNewFoodRecord2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewFoodRecord(ctx context.Context, v interface{}) (model.NewFoodRecord, error) {
+	return ec.unmarshalInputNewFoodRecord(ctx, v)
+}
+
 func (ec *executionContext) unmarshalNNewUser2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewUser(ctx context.Context, v interface{}) (model.NewUser, error) {
 	return ec.unmarshalInputNewUser(ctx, v)
 }
@@ -3707,30 +3789,6 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return ec.marshalOInt2int(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalONewExerciseRecord2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewExerciseRecord(ctx context.Context, v interface{}) (model.NewExerciseRecord, error) {
-	return ec.unmarshalInputNewExerciseRecord(ctx, v)
-}
-
-func (ec *executionContext) unmarshalONewExerciseRecord2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewExerciseRecord(ctx context.Context, v interface{}) (*model.NewExerciseRecord, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalONewExerciseRecord2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewExerciseRecord(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) unmarshalONewFoodRecord2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewFoodRecord(ctx context.Context, v interface{}) (model.NewFoodRecord, error) {
-	return ec.unmarshalInputNewFoodRecord(ctx, v)
-}
-
-func (ec *executionContext) unmarshalONewFoodRecord2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewFoodRecord(ctx context.Context, v interface{}) (*model.NewFoodRecord, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalONewFoodRecord2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐNewFoodRecord(ctx, v)
-	return &res, err
-}
-
 func (ec *executionContext) unmarshalOSex2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐSex(ctx context.Context, v interface{}) (model.Sex, error) {
 	var res model.Sex
 	return res, res.UnmarshalGQL(v)
@@ -3761,6 +3819,17 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) marshalOUser2githubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
+	return ec._User(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋMatterhornᚑAppsᚋMatterhornApiServiceᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
