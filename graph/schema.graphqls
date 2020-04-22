@@ -34,22 +34,20 @@ enum Sex {
 }
 
 type Query {
-  user(id: ID!): User!
+  me: User
+  user(id: ID!): User
 }
 
 input CalorieGoalInput {
-  userId: ID!
   calories: Int!
 }
 
 input NewExerciseRecord {
-  userId: ID!
   label: String
   calories: Int
 }
 
 input NewFoodRecord {
-  userId: ID!
   label: String
   calories: Int
 }
@@ -59,8 +57,9 @@ input NewUser {
 }
 
 type Mutation {
+  createMe: User!
   createUser(input: NewUser!): User!
-  createExerciseRecord(input: NewExerciseRecord): ExerciseRecord!
-  createFoodRecord(input: NewFoodRecord): FoodRecord!
+  createExerciseRecord(input: NewExerciseRecord!): ExerciseRecord!
+  createFoodRecord(input: NewFoodRecord!): FoodRecord!
   setCalorieGoal(input: CalorieGoalInput!): CalorieGoal!
 }

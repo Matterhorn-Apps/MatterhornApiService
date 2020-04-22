@@ -10,21 +10,39 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Matterhorn-Apps/MatterhornApiService/auth"
 	"github.com/Matterhorn-Apps/MatterhornApiService/database"
 	"github.com/Matterhorn-Apps/MatterhornApiService/graph/generated"
 	"github.com/Matterhorn-Apps/MatterhornApiService/graph/model"
 )
 
+func (r *mutationResolver) CreateMe(ctx context.Context) (*model.User, error) {
+	// Get the user ID from context
+	// If not found, request is not authenticated and should fail
+	tokenSub, err := auth.GetUserIDFromContext(ctx)
+	if tokenSub == nil || err != nil {
+		return nil, errors.New("request failed: caller not authenticated")
+	}
+
+	// Try to get user with given token sub as ID
+	// This will fail if the user already exists
+	return r.CreateUser(ctx, model.NewUser{
+		ID: *tokenSub,
+	})
+}
+
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
+	// TODO: Require elevated permissions to create user other than the one who is authenticated
+
 	// Execute query to insert new user row
-	query := fmt.Sprintf("INSERT INTO users (user_id) VALUES (%s);", input.ID)
-	_, readErr := r.DB.Exec(query)
+	query := fmt.Sprintf("INSERT INTO users (user_id) VALUES ( '%s' );", input.ID)
+	_, readErr := r.DB.Query(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
 			switch *errCode {
 			case 1062:
 				// User ID already exists
-				return nil, readErr
+				return nil, fmt.Errorf("user with ID '%s' already exists", input.ID)
 			}
 		}
 
@@ -37,15 +55,22 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	}, nil
 }
 
-func (r *mutationResolver) CreateExerciseRecord(ctx context.Context, input *model.NewExerciseRecord) (*model.ExerciseRecord, error) {
+func (r *mutationResolver) CreateExerciseRecord(ctx context.Context, input model.NewExerciseRecord) (*model.ExerciseRecord, error) {
+	// Get the user ID from context
+	// If not found, request is not authenticated and should fail
+	userId, err := auth.GetUserIDFromContext(ctx)
+	if userId == nil || err != nil {
+		return nil, errors.New("request failed: caller not authenticated")
+	}
+
 	if *input.Calories < 0 {
 		return nil, errors.New("Invalid calorie value provided")
 	}
 
 	// Query the database for matching exercise records
 	query := fmt.Sprintf("INSERT INTO exercise_records (user_id, label, calories) VALUES ('%s', '%s', %d);",
-		input.UserID, *input.Label, *input.Calories)
-	_, readErr := r.DB.Exec(query)
+		*userId, *input.Label, *input.Calories)
+	_, readErr := r.DB.Query(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
 			switch *errCode {
@@ -65,15 +90,22 @@ func (r *mutationResolver) CreateExerciseRecord(ctx context.Context, input *mode
 	}, nil
 }
 
-func (r *mutationResolver) CreateFoodRecord(ctx context.Context, input *model.NewFoodRecord) (*model.FoodRecord, error) {
+func (r *mutationResolver) CreateFoodRecord(ctx context.Context, input model.NewFoodRecord) (*model.FoodRecord, error) {
+	// Get the user ID from context
+	// If not found, request is not authenticated and should fail
+	userId, err := auth.GetUserIDFromContext(ctx)
+	if userId == nil || err != nil {
+		return nil, errors.New("request failed: caller not authenticated")
+	}
+
 	if *input.Calories < 0 {
 		return nil, errors.New("Invalid calorie value provided")
 	}
 
 	// Query the database for matching Food records
 	query := fmt.Sprintf("INSERT INTO food_records (user_id, label, calories) VALUES ('%s', '%s', %d);",
-		input.UserID, *input.Label, *input.Calories)
-	_, readErr := r.DB.Exec(query)
+		*userId, *input.Label, *input.Calories)
+	_, readErr := r.DB.Query(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
 			switch *errCode {
@@ -94,14 +126,21 @@ func (r *mutationResolver) CreateFoodRecord(ctx context.Context, input *model.Ne
 }
 
 func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.CalorieGoalInput) (*model.CalorieGoal, error) {
+	// Get the user ID from context
+	// If not found, request is not authenticated and should fail
+	userId, err := auth.GetUserIDFromContext(ctx)
+	if userId == nil || err != nil {
+		return nil, errors.New("request failed: caller not authenticated")
+	}
+
 	if input.Calories < 0 {
 		return nil, errors.New("Invalid calorie goal provided")
 	}
 
 	// Update calorie goal in the user row
 	query := fmt.Sprintf("UPDATE users SET calorie_goal=%d WHERE user_id='%s'",
-		input.Calories, input.UserID)
-	_, readErr := r.DB.Exec(query)
+		input.Calories, *userId)
+	_, readErr := r.DB.Query(query)
 	if readErr != nil {
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
 			switch *errCode {
@@ -120,6 +159,17 @@ func (r *mutationResolver) SetCalorieGoal(ctx context.Context, input model.Calor
 	}, nil
 }
 
+func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
+	// Get the user ID from context
+	// If not found, request is not authenticated and should fail
+	userId, err := auth.GetUserIDFromContext(ctx)
+	if userId == nil || err != nil {
+		return nil, errors.New("request failed: caller not authenticated")
+	}
+
+	return r.User(ctx, *userId)
+}
+
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
 	// Query the database for the User row
 	query := fmt.Sprintf(
@@ -130,8 +180,8 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 		if errCode, ok := database.TryExtractMySQLErrorCode(readErr); ok {
 			switch *errCode {
 			case 1452:
-				// User not found
-				return nil, readErr
+				// User does not exist - return nil value without error
+				return nil, nil
 			}
 		}
 
