@@ -1,4 +1,5 @@
 # MatterhornApiService
+![](https://github.com/Matterhorn-Apps/MatterhornApiService/workflows/build/badge.svg)
 Web API service for Matterhorn implemented with Go.
 
 ## Requirements
