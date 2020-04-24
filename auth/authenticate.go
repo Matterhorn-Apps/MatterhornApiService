@@ -82,7 +82,7 @@ func BuildAuthenticationMiddleware() *jwtmiddleware.JWTMiddleware {
 	})
 }
 
-// GetUserIdFromContext retrieves the User ID from a given JWT access token
+// GetUserIDFromContext retrieves the User ID from a given JWT access token
 func GetUserIDFromContext(ctx context.Context) (*string, error) {
 	//
 	// THIS CODE BYPASSES AUTHENTICATION - DO NOT ENABLE IN PRODUCTION ENVIRONMENT
@@ -121,9 +121,11 @@ func GetUserIDFromContext(ctx context.Context) (*string, error) {
 func validationKeyGetter(token *jwt.Token) (interface{}, error) {
 	// Verify 'aud' claim
 	// Audience is expected to match value for MatterhornAPIService
+	// TODO: Troubleshoot why this doesn't successfully verify token with correct audience from Auth0
 	aud := auth0ApiIdentifier
-	checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, true)
+	checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
 	if !checkAud {
+		log.Printf("invalid audience on token: %v", token)
 		return token, errors.New("invalid audience")
 	}
 	// Verify 'iss' claim
@@ -131,6 +133,7 @@ func validationKeyGetter(token *jwt.Token) (interface{}, error) {
 	iss := auth0Domain
 	checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, true)
 	if !checkIss {
+		log.Printf("invalid issuer on token: %v", token)
 		return token, errors.New("invalid issuer")
 	}
 
