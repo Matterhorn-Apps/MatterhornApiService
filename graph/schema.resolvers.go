@@ -32,7 +32,8 @@ func (r *mutationResolver) CreateMe(ctx context.Context) (*model.User, error) {
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
-	// TODO: Require elevated permissions to create user other than the one who is authenticated
+	// TODO: Require authorization to access protected APIs #13
+	// https://github.com/Matterhorn-Apps/MatterhornApiService/issues/13
 
 	// Execute query to insert new user row
 	query := fmt.Sprintf("INSERT INTO users (user_id) VALUES ( '%s' );", input.ID)
