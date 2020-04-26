@@ -26,11 +26,23 @@ func LoadEnv(relPath string) {
 
 	// Environment configuration files are loaded in order from HIGHEST to LOWEST priority.
 	// .env.STAGE.local > .env.STAGE > .env.local > .env
-	err := godotenv.Load(
-		fmt.Sprintf("%s/.env.%s.local", relPath, stage),
-		fmt.Sprintf("%s/.env.%s", relPath, stage),
-		fmt.Sprintf("%s/.env.local", relPath),
-		fmt.Sprintf("%s/.env", relPath))
+	var err error
+	err = godotenv.Load(fmt.Sprintf("%s/.env.%s.local", relPath, stage))
+	if err != nil {
+		log.Printf("Local stage configuration overrides not found.")
+	}
+
+	err = godotenv.Load(fmt.Sprintf("%s/.env.%s", relPath, stage))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = godotenv.Load(fmt.Sprintf("%s/.env.local", relPath))
+	if err != nil {
+		log.Printf("Local global configuration overrides not found.")
+	}
+
+	err = godotenv.Load(fmt.Sprintf("%s/.env", relPath))
 	if err != nil {
 		log.Fatal(err)
 	}
