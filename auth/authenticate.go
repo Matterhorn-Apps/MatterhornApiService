@@ -70,7 +70,6 @@ func BuildAuthenticationMiddleware() *jwtmiddleware.JWTMiddleware {
 	// Require valid JWT token to access endpoint only in production environment.
 	// This enables us to use GraphQL playground and use fake test accounts without
 	// authenticating with Auth0 in local and dev environments.
-	// TODO: Consider alternatives that offer similar developer convenience without bypassing security.
 	credentialsOptional := os.Getenv("MATTERHORN_ENV") != "prod"
 
 	return jwtmiddleware.New(jwtmiddleware.Options{
@@ -119,9 +118,11 @@ func GetUserIDFromContext(ctx context.Context) (*string, error) {
 }
 
 func validationKeyGetter(token *jwt.Token) (interface{}, error) {
+	// TODO: Code adapted from Auth0 samples fails to detect audience from valid token #36
+	// https://github.com/Matterhorn-Apps/MatterhornApiService/issues/36
+
 	// Verify 'aud' claim
 	// Audience is expected to match value for MatterhornAPIService
-	// TODO: Troubleshoot why this doesn't successfully verify token with correct audience from Auth0
 	aud := auth0ApiIdentifier
 	checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
 	if !checkAud {
