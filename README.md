@@ -1,4 +1,5 @@
 # MatterhornApiService
+![](https://github.com/Matterhorn-Apps/MatterhornApiService/workflows/build/badge.svg)
 Web API service for Matterhorn implemented with Go.
 
 ## Requirements
@@ -17,6 +18,14 @@ MatterhornApiService is built to run on Go v1.14.
 `MATTERHORN_ENV` - Defines the environment configuration to be used. Expected values include `dev` and `prod`. This determines the database endpoint and schema name is used.
 
 `MATTERHORN_DB_PASSWORD` - Specifies the password used to connect to the database instance. User name is expected to be "admin" for now.
+
+For a given environment stage, configuration files are loaded in the following order from lowest to highest priority:
+1. .env
+2. .env.local
+3. .env.<STAGE>
+4. .env.<STAGE>.local
+
+Local configuration can be modified for development by creating local configuration files (e.g. .env.local, .env.dev.local). These files are ignored by git and should not be checked into source control.
 
 ### Build
 Use the Go CLI to build the application
