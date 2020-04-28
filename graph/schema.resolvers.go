@@ -197,7 +197,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
 	// Query the database for the User row
 	query := fmt.Sprintf(
-		`SELECT display_name, age, height_inches, sex, weight_pounds, calorie_goal from users 
+		`SELECT display_name, age, height_inches, sex, calorie_goal from users 
 			WHERE user_id='%s';`, id)
 	readRows, readErr := r.DB.Query(query)
 	if readErr != nil {
@@ -217,9 +217,23 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 	// Read value from row response
 
 	var displayName, sex sql.NullString
-	var age, height, weight, calorieGoal sql.NullInt64
+	var age, height, calorieGoal sql.NullInt64
 	readRows.Next()
-	readRows.Scan(&displayName, &age, &height, &sex, &weight, &calorieGoal)
+	readRows.Scan(&displayName, &age, &height, &sex, &calorieGoal)
+
+	// Populate weight entry
+	var weight sql.NullInt64
+
+	weightQuery := fmt.Sprintf(
+		`SELECT weight_pounds from weight_records
+			WHERE user_id='%s
+			ORDER BY timestamp;`, id)
+	readWeightRows, _ := r.DB.Query(weightQuery)
+	defer readWeightRows.Close()
+
+	// Read value
+	readWeightRows.Next()
+	readRows.Scan(&weight)
 
 	// Construct response data object
 	return &model.User{
