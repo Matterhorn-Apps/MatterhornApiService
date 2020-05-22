@@ -227,14 +227,28 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 
 	weightQuery := fmt.Sprintf(
 		`SELECT weight_pounds from weight_records
-			WHERE user_id='%s
+			WHERE user_id='%s'
 			ORDER BY timestamp;`, id)
-	readWeightRows, _ := r.DB.Query(weightQuery)
+	readWeightRows, readWeightErr := r.DB.Query(weightQuery)
+	if readWeightErr != nil {
+		if errCode, ok := database.TryExtractMySQLErrorCode(readWeightErr); ok {
+			switch *errCode {
+			case 1452:
+				// User does not exist - return nil value without error
+				return nil, nil
+			}
+		}
+
+		log.Printf("Failed to query database: %v", readWeightErr)
+		return nil, readWeightErr
+	}
+
 	defer readWeightRows.Close()
 
 	// Read value
-	readWeightRows.Next()
-	readRows.Scan(&weight)
+	if readWeightRows.Next() {
+		readWeightRows.Scan(&weight)
+	}
 
 	// Construct response data object
 	return &model.User{
